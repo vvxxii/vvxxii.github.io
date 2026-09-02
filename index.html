@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>VVXXII — ARCHIVE</title>
+  <title>VVXXII</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,289 +13,204 @@
     }
 
     body {
-      background-color: #050505;
-      color: #e0e0e0;
-      font-family: 'Courier New', Courier, monospace;
+      background-color: #000;
+      color: #fff;
       height: 100vh;
+      width: 100vw;
       overflow: hidden;
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      padding: 2rem 1.5rem;
+      font-family: monospace;
     }
 
-    header {
-      width: 100%;
-      max-width: 1000px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #1a1a1a;
-      padding-bottom: 1rem;
-      z-index: 10;
-    }
-
-    h1 {
-      font-size: 1rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: #fff;
-    }
-
-    .meta {
-      font-size: 0.75rem;
-      color: #555;
-      letter-spacing: 1px;
-    }
-
-    .instructions {
-      font-size: 0.7rem;
-      color: #444;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      z-index: 10;
-      text-align: center;
-    }
-
+    /* Viewport a schermo intero senza limiti */
     .viewport {
-      width: 100%;
-      height: 60vh;
-      perspective: 1000px;
+      width: 100vw;
+      height: 100vh;
+      perspective: 800px;
       display: flex;
       justify-content: center;
       align-items: center;
       position: relative;
       cursor: grab;
+      overflow: hidden;
     }
 
     .viewport:active {
       cursor: grabbing;
     }
 
+    /* Tamburo gigante che sborda dallo schermo */
     .carousel {
-      width: 220px;
-      height: 300px;
+      width: 140px;
+      height: 100vh;
       position: absolute;
       transform-style: preserve-3d;
-      transition: transform 0.1s ease-out;
+      transition: transform 0.1s ease-out, opacity 0.5s ease, filter 0.5s ease;
     }
 
-    .card {
-      position: absolute;
-      width: 220px;
-      height: 300px;
-      left: 0;
-      top: 0;
-      border: 1px solid #222;
-      background: #0a0a0a;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      backface-visibility: visible;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-      transition: border-color 0.3s;
-    }
-
-    .card:hover {
-      border-color: #555;
-    }
-
-    .card img {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-      filter: grayscale(80%);
-      transition: filter 0.3s;
+    /* Effetto dissolvenza/glitch al click */
+    .carousel.disperse {
+      opacity: 0;
+      filter: blur(20px) contrast(300%) grayscale(100%);
+      transform: scale(1.3) translateZ(200px)!important;
       pointer-events: none;
     }
 
-    .card:hover img {
-      filter: grayscale(0%);
+    /* Settori verticali del tamburo senza margini */
+    .sector {
+      position: absolute;
+      width: 140px;
+      height: 70vh;
+      top: 15vh;
+      left: 0;
+      background: #000;
+      backface-visibility: visible;
+      /* Sfumatura ai margini laterali per glitchare un'immagine nell'altra */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+      transition: filter 0.3s;
     }
 
-    .card-title {
-      font-size: 0.75rem;
-      color: #888;
-      text-align: center;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+    .sector img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(100%) contrast(120%);
+      opacity: 0.7;
+      transition: all 0.3s ease;
+      pointer-events: none;
     }
 
-    .modal {
+    .sector:hover img {
+      filter: grayscale(0%) contrast(100%);
+      opacity: 1;
+    }
+
+    /* Modal / Viewer a scroll verticale per serie di foto */
+    .project-viewer {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(5, 5, 5, 0.95);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background: #000;
+      z-index: 200;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.4s ease;
-      z-index: 100;
-      padding: 2rem;
+      transition: opacity 0.6s ease;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none; /* Nasconde scrollbar */
     }
 
-    .modal.active {
+    .project-viewer::-webkit-scrollbar {
+      display: none;
+    }
+
+    .project-viewer.active {
       opacity: 1;
       pointer-events: auto;
     }
 
-    .modal-content {
-      max-width: 800px;
-      width: 100%;
-      border: 1px solid #333;
-      background: #0d0d0d;
-      padding: 2rem;
-      position: relative;
+    /* Feed verticale interno di foto */
+    .photo-feed {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 5rem 1rem;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 3rem;
     }
 
-    .modal-content img {
+    .photo-feed img {
       width: 100%;
-      max-height: 60vh;
-      object-fit: contain;
-      border: 1px solid #1a1a1a;
-    }
-
-    .modal-desc {
-      font-size: 0.85rem;
-      color: #bbb;
-      line-height: 1.6;
+      height: auto;
+      display: block;
+      filter: grayscale(20%);
+      border: 1px solid #111;
     }
 
     .close-btn {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: none;
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      background: rgba(0,0,0,0.8);
       border: 1px solid #333;
       color: #888;
       font-family: monospace;
-      padding: 0.3rem 0.8rem;
+      padding: 0.5rem 1rem;
       cursor: pointer;
-      font-size: 0.75rem;
+      z-index: 210;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
     }
 
     .close-btn:hover {
       color: #fff;
       border-color: #666;
     }
-
-    footer {
-      width: 100%;
-      max-width: 1000px;
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px solid #1a1a1a;
-      padding-top: 1rem;
-      font-size: 0.7rem;
-      color: #333;
-      z-index: 10;
-    }
-
-    @media (max-width: 600px) {
-      .carousel, .card {
-        width: 170px;
-        height: 240px;
-      }
-      .card img {
-        height: 170px;
-      }
-    }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>vvxxii</h1>
-    <span class="meta">[ ROTATING DRUM v1.0 ]</span>
-  </header>
-
-  <div class="instructions">
-    TRASCINA PER RUOTARE / CLICCA PER ESPLORARE
-  </div>
-
   <div class="viewport" id="viewport">
     <div class="carousel" id="carousel">
       
-      <!-- ITEM 1 -->
-      <div class="card" onclick="openModal('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000', '01 // SHADOWS', 'Primo esperimento di archiviazione visiva. Frammento di architettura e ombra.')">
-        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="Work 01">
-        <div class="card-title">01 // SHADOWS</div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000', 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000'])">
+        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="">
       </div>
 
-      <!-- ITEM 2 -->
-      <div class="card" onclick="openModal('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000', '02 // NOISE', 'Studio sulla texture e sul rumore visivo ad alto contrasto.')">
-        <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000" alt="Work 02">
-        <div class="card-title">02 // NOISE</div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000', 'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000'])">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000" alt="">
       </div>
 
-      <!-- ITEM 3 -->
-      <div class="card" onclick="openModal('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000', '03 // VOID', 'Esplorazione dello spazio vuoto e delle superfici scure.')">
-        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000" alt="Work 03">
-        <div class="card-title">03 // VOID</div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000', 'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000'])">
+        <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000" alt="">
       </div>
 
-      <!-- ITEM 4 -->
-      <div class="card" onclick="openModal('https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000', '04 // SIGNAL', 'Intercettazione di segnali visivi e frequenze cromatiche ridotte.')">
-        <img src="https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000" alt="Work 04">
-        <div class="card-title">04 // SIGNAL</div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000'])">
+        <img src="https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000" alt="">
       </div>
 
-      <!-- ITEM 5 -->
-      <div class="card" onclick="openModal('https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000', '05 // PERSPECTIVE', 'Inquadratura prospettica su struttura industriale.')">
-        <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000" alt="Work 05">
-        <div class="card-title">05 // PERSPECTIVE</div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000'])">
+        <img src="https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000" alt="">
       </div>
 
-      <!-- ITEM 6 -->
-      <div class="card" onclick="openModal('https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000', '06 // MONOLITH', 'Presenza monolitica al centro dello spazio osservativo.')">
-        <img src="https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000" alt="Work 06">
-        <div class="card-title">06 // MONOLITH</div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000'])">
+        <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000" alt="">
       </div>
 
     </div>
   </div>
 
-  <div class="modal" id="modal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal()">[ CHIUDI X ]</button>
-      <img id="modal-img" src="" alt="Detail">
-      <h2 id="modal-title" style="font-size:1rem; letter-spacing:2px; color:#fff;"></h2>
-      <p class="modal-desc" id="modal-desc"></p>
-    </div>
+  <div class="project-viewer" id="viewer">
+    <button class="close-btn" onclick="closeProject()">[ ESC ]</button>
+    <div class="photo-feed" id="photo-feed">
+      </div>
   </div>
-
-  <footer>
-    <span>VVXXII © 2026</span>
-    <span>SYS_STATUS: ONLINE</span>
-  </footer>
 
   <script>
     const carousel = document.getElementById('carousel');
-    const cards = document.querySelectorAll('.card');
-    const totalCards = cards.length;
-    const angleStep = 360 / totalCards;
+    const sectors = document.querySelectorAll('.sector');
+    const totalSectors = sectors.length;
+    const angleStep = 360 / totalSectors;
     
-    const cardWidth = window.innerWidth < 600 ? 170 : 220;
-    const radius = Math.round((cardWidth / 2) / Math.tan(Math.PI / totalCards)) + 40;
+    // Calcola il raggio per far combaciare perfettamente i bordi senza spazi
+    const sectorWidth = 140;
+    const radius = Math.round((sectorWidth / 2) / Math.tan(Math.PI / totalSectors));
 
     let currentAngle = 0;
     let isDragging = false;
     let startX = 0;
     let lastAngle = 0;
-    let autoRotateSpeed = 0.15;
+    let autoRotateSpeed = 0.08; // Rotazione lenta da scanner
 
-    cards.forEach((card, index) => {
+    // Posiziona ogni settore sul cilindro 3D
+    sectors.forEach((sector, index) => {
       const angle = index * angleStep;
-      card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+      sector.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
     });
 
     function animate() {
@@ -312,6 +227,7 @@
 
     const viewport = document.getElementById('viewport');
 
+    // Interazioni Trascina / Touch
     viewport.addEventListener('mousedown', (e) => {
       isDragging = true;
       startX = e.clientX;
@@ -321,13 +237,11 @@
     window.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       const deltaX = e.clientX - startX;
-      currentAngle = lastAngle + deltaX * 0.4;
+      currentAngle = lastAngle + deltaX * 0.3;
       updateCarousel();
     });
 
-    window.addEventListener('mouseup', () => {
-      isDragging = false;
-    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
 
     viewport.addEventListener('touchstart', (e) => {
       isDragging = true;
@@ -338,29 +252,41 @@
     window.addEventListener('touchmove', (e) => {
       if (!isDragging) return;
       const deltaX = e.touches[0].clientX - startX;
-      currentAngle = lastAngle + deltaX * 0.4;
+      currentAngle = lastAngle + deltaX * 0.3;
       updateCarousel();
     });
 
-    window.addEventListener('touchend', () => {
-      isDragging = false;
-    });
+    window.addEventListener('touchend', () => { isDragging = false; });
 
     viewport.addEventListener('wheel', (e) => {
       e.preventDefault();
-      currentAngle += e.deltaY * 0.1;
+      currentAngle += e.deltaY * 0.08;
       updateCarousel();
     }, { passive: false });
 
-    function openModal(imgSrc, title, desc) {
-      document.getElementById('modal-img').src = imgSrc;
-      document.getElementById('modal-title').innerText = title;
-      document.getElementById('modal-desc').innerText = desc;
-      document.getElementById('modal').classList.add('active');
+    // Apri Progetto con animazione di dissoluzione
+    function openProject(imagesArray) {
+      carousel.classList.add('disperse');
+      
+      const feed = document.getElementById('photo-feed');
+      feed.innerHTML = '';
+      
+      imagesArray.forEach(url => {
+        const img = document.createElement('img');
+        img.src = url;
+        feed.appendChild(img);
+      });
+
+      setTimeout(() => {
+        document.getElementById('viewer').classList.add('active');
+      }, 400);
     }
 
-    function closeModal() {
-      document.getElementById('modal').classList.remove('active');
+    function closeProject() {
+      document.getElementById('viewer').classList.remove('active');
+      setTimeout(() => {
+        carousel.classList.remove('disperse');
+      }, 300);
     }
 
     animate();
