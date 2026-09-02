@@ -13,8 +13,8 @@
     }
 
     body {
-      background-color: #000;
-      color: #777;
+      background-color: #050505;
+      color: #fff;
       height: 100vh;
       width: 100vw;
       overflow: hidden;
@@ -24,11 +24,11 @@
       font-family: 'Courier New', Courier, monospace;
     }
 
-    /* Prospettiva stretta: la camera è dentro/a ridosso del tamburo */
+    /* Stage 3D visibile e d'impatto */
     .viewport {
       width: 100vw;
       height: 100vh;
-      perspective: 450px;
+      perspective: 650px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -42,85 +42,82 @@
     }
 
     .carousel {
-      width: 180px;
-      height: 120vh;
+      width: 160px;
+      height: 75vh;
       position: absolute;
       transform-style: preserve-3d;
-      transition: transform 0.1s ease-out, opacity 0.5s ease, filter 0.5s ease;
+      transition: transform 0.1s ease-out, opacity 0.4s ease, filter 0.4s ease;
     }
 
-    /* Dissolvenza glitch all'apertura */
-    .carousel.disperse {
-      opacity: 0;
-      filter: blur(30px) contrast(400%) grayscale(100%);
-      transform: scale(1.5) translateZ(300px)!important;
+    /* Esplosione Glitch Atomica / Particellare */
+    .carousel.glitch-explode {
+      animation: atomicGlitch 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
       pointer-events: none;
     }
 
-    /* Singola Colonna/Faccia del Tamburo */
-    .sector {
-      position: absolute;
-      width: 180px;
-      height: 100vh;
-      top: 0;
-      left: 0;
-      background: #030303;
-      backface-visibility: visible;
-      /* Maschera di sfumatura ai bordi laterali */
-      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-      mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-      overflow-y: auto;
-      overflow-x: hidden;
-      scrollbar-width: none;
-      transition: filter 0.4s ease, opacity 0.4s ease;
-      filter: brightness(0.25) contrast(140%) grayscale(90%);
+    @keyframes atomicGlitch {
+      0% {
+        filter: invert(0%) contrast(100%);
+        transform: scale(1);
+      }
+      30% {
+        filter: invert(100%) contrast(500%) hue-rotate(90deg);
+        transform: scale(1.1) rotateZ(2deg) skewX(10deg);
+        opacity: 0.9;
+      }
+      60% {
+        filter: contrast(1000%) grayscale(100%) drop-shadow(0 0 15px #fff);
+        transform: scale(1.25) translateZ(150px) rotateZ(-3deg);
+        opacity: 0.5;
+      }
+      100% {
+        filter: blur(40px) contrast(2000%) grayscale(100%);
+        transform: scale(1.6) translateZ(400px);
+        opacity: 0;
+      }
     }
 
-    .sector::-webkit-scrollbar {
-      display: none;
+    /* Singola Faccia del Tamburo (Pulita, no scroll) */
+    .sector {
+      position: absolute;
+      width: 160px;
+      height: 70vh;
+      top: 0;
+      left: 0;
+      background: #000;
+      backface-visibility: visible;
+      /* Sfumatura sottile ai margini per farsi compenetrare */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+      overflow: hidden;
+      transition: filter 0.3s ease, opacity 0.3s ease;
+      filter: brightness(0.65) contrast(110%) grayscale(40%);
     }
 
     .sector:hover {
       filter: brightness(1) contrast(100%) grayscale(0%);
     }
 
-    /* Contenuto interno alla colonna (Scrollabile) */
-    .sector-content {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      padding: 4rem 0.5rem;
-    }
-
     .sector img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
       display: block;
       pointer-events: none;
     }
 
-    .sector-text {
-      font-size: 0.65rem;
-      line-height: 1.4;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      word-break: break-word;
-      padding: 0 0.3rem;
-    }
-
-    /* Overlay Modal per il dettaglio */
+    /* Modal Viewer (Scroll Fotografico e Testo) */
     .project-viewer {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: #000;
+      background: #050505;
       z-index: 200;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.6s ease;
+      transition: opacity 0.5s ease;
       overflow-y: auto;
       scrollbar-width: none;
     }
@@ -133,25 +130,29 @@
     }
 
     .photo-feed {
-      max-width: 900px;
+      max-width: 850px;
       margin: 0 auto;
-      padding: 6rem 1.5rem;
+      padding: 7rem 1.5rem 5rem 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 4rem;
+      gap: 3.5rem;
     }
 
     .photo-feed img {
       width: 100%;
       height: auto;
+      display: block;
+      border: 1px solid #1a1a1a;
     }
 
     .photo-feed p {
       font-size: 0.85rem;
-      color: #aaa;
+      color: #888;
       line-height: 1.8;
+      letter-spacing: 1px;
+      text-transform: uppercase;
       border-left: 1px solid #333;
-      padding-left: 1rem;
+      padding-left: 1.2rem;
     }
 
     .close-btn {
@@ -180,94 +181,44 @@
   <div class="viewport" id="viewport">
     <div class="carousel" id="carousel">
       
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000', 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000'], 'ESTRAZIONE 01 // ARCHIVIO DENSE OMBRE E FRAMMENTI URBAN.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_01 ]</span>
-          <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="">
-          <p class="sector-text">Studio sulla rifrazione della luce e ombre radenti su superfici grezze.</p>
-          <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000" alt="">
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000', 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000'], 'ESTRAZIONE 01 // ARCHIVIO URBAN ED ESPERIMENTI DI LUCE RADENTE.')">
+        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000'], 'ESTRAZIONE 02 // SPAZIO VUOTO.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_02 ]</span>
-          <p class="sector-text">Assenza di segnale visivo. Campo aperto.</p>
-          <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000" alt="">
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000'], 'ESTRAZIONE 02 // STUDIO SULLO SPAZIO VUOTO.')">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000'], 'ESTRAZIONE 03 // PERSPECTIVE.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_03 ]</span>
-          <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000" alt="">
-          <p class="sector-text">Geometrie industriali e strutture verticali.</p>
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000', 'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000'], 'ESTRAZIONE 03 // GEOMETRIE E ARCHITETTURE MONOLITICHE.')">
+        <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000'], 'ESTRAZIONE 04 // NOISE.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_04 ]</span>
-          <p class="sector-text">Bassa frequenza.</p>
-          <img src="https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000" alt="">
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000'], 'ESTRAZIONE 04 // SEGNALI VISIVI AD ALTA FREQUENZA.')">
+        <img src="https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000'], 'ESTRAZIONE 05 // MONOLITH.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_05 ]</span>
-          <img src="https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000" alt="">
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000'], 'ESTRAZIONE 05 // STRUTTURA E RUMORE FOTOGRAFICO.')">
+        <img src="https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000'], 'ESTRAZIONE 06 // TEXTURE.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_06 ]</span>
-          <p class="sector-text">Analisi del rumore digitale su pellicola fotografica.</p>
-          <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000" alt="">
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000'], 'ESTRAZIONE 06 // TEXTURE MONOCROMATICHE.')">
+        <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000'], 'ESTRAZIONE 07.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_07 ]</span>
-          <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="">
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000'], 'ESTRAZIONE 07 // FRAMMENTI UNICI.')">
+        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000'], 'ESTRAZIONE 08.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_08 ]</span>
-          <p class="sector-text">Superficie nera.</p>
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000'], 'ESTRAZIONE 08 // SUPERFICIE OSCURA.')">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000'], 'ESTRAZIONE 09.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_09 ]</span>
-          <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000" alt="">
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000'], 'ESTRAZIONE 09 // PROSPETTIVA.')">
+        <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000" alt="">
       </div>
 
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000'], 'ESTRAZIONE 10.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_10 ]</span>
-          <p class="sector-text">Frequenze cromatiche.</p>
-        </div>
-      </div>
-
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000'], 'ESTRAZIONE 11.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_11 ]</span>
-          <img src="https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000" alt="">
-        </div>
-      </div>
-
-      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000'], 'ESTRAZIONE 12.')">
-        <div class="sector-content">
-          <span class="sector-text">[ SEC_12 ]</span>
-          <p class="sector-text">Fine ciclo.</p>
-        </div>
+      <div class="sector" onclick="openProject(['https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000'], 'ESTRAZIONE 10 // ONDE.')">
+        <img src="https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000" alt="">
       </div>
 
     </div>
@@ -284,15 +235,14 @@
     const totalSectors = sectors.length;
     const angleStep = 360 / totalSectors;
     
-    // Calcola il raggio tridimensionale per 12 facce da 180px
-    const sectorWidth = 180;
-    const radius = Math.round((sectorWidth / 2) / Math.tan(Math.PI / totalSectors)) + 20;
+    const sectorWidth = 160;
+    const radius = Math.round((sectorWidth / 2) / Math.tan(Math.PI / totalSectors)) + 15;
 
     let currentAngle = 0;
     let isDragging = false;
     let startX = 0;
     let lastAngle = 0;
-    let autoRotateSpeed = 0.05;
+    let autoRotateSpeed = 0.08;
 
     sectors.forEach((sector, index) => {
       const angle = index * angleStep;
@@ -314,8 +264,6 @@
     const viewport = document.getElementById('viewport');
 
     viewport.addEventListener('mousedown', (e) => {
-      // Ignora il drag se l'utente sta facendo uno scroll dentro una colonna
-      if (e.target.closest('.sector')) return;
       isDragging = true;
       startX = e.clientX;
       lastAngle = currentAngle;
@@ -324,15 +272,13 @@
     window.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       const deltaX = e.clientX - startX;
-      currentAngle = lastAngle + deltaX * 0.25;
+      currentAngle = lastAngle + deltaX * 0.3;
       updateCarousel();
     });
 
     window.addEventListener('mouseup', () => { isDragging = false; });
 
-    // Touch mobile
     viewport.addEventListener('touchstart', (e) => {
-      if (e.target.closest('.sector')) return;
       isDragging = true;
       startX = e.touches[0].clientX;
       lastAngle = currentAngle;
@@ -341,23 +287,21 @@
     window.addEventListener('touchmove', (e) => {
       if (!isDragging) return;
       const deltaX = e.touches[0].clientX - startX;
-      currentAngle = lastAngle + deltaX * 0.25;
+      currentAngle = lastAngle + deltaX * 0.3;
       updateCarousel();
     });
 
     window.addEventListener('touchend', () => { isDragging = false; });
 
-    // Rotella del mouse
     viewport.addEventListener('wheel', (e) => {
-      // Se si trova dentro una colonna, permette lo scroll verticale della colonna stessa
-      if (e.target.closest('.sector')) return;
       e.preventDefault();
-      currentAngle += e.deltaY * 0.05;
+      currentAngle += e.deltaY * 0.08;
       updateCarousel();
     }, { passive: false });
 
     function openProject(imagesArray, textContent) {
-      carousel.classList.add('disperse');
+      // Innesca l'animazione di esplosione glitch atomica
+      carousel.classList.add('glitch-explode');
       
       const feed = document.getElementById('photo-feed');
       feed.innerHTML = '';
@@ -374,15 +318,16 @@
         feed.appendChild(img);
       });
 
+      // Apre la vista a scroll dopo l'esplosione
       setTimeout(() => {
         document.getElementById('viewer').classList.add('active');
-      }, 400);
+      }, 380);
     }
 
     function closeProject() {
       document.getElementById('viewer').classList.remove('active');
       setTimeout(() => {
-        carousel.classList.remove('disperse');
+        carousel.classList.remove('glitch-explode');
       }, 300);
     }
 
