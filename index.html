@@ -3,277 +3,345 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VVXXII // THE CAGE</title>
+  <title>VVXXII // EDITORIAL</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      user-select: none;
-      cursor: crosshair;
     }
 
     body {
-      background-color: #020202;
-      color: #777;
+      background-color: #030303;
+      color: #888;
+      font-family: 'Courier New', Courier, monospace;
+      overflow-x: hidden;
       height: 100vh;
       width: 100vw;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Courier New', Courier, monospace;
     }
 
-    /* Tela 3D per la Gabbia */
-    canvas {
+    /* AREA CENTRALE MAIN (Foto a tutta pagina + Scroll dei dettagli) */
+    .main-feed {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100vw;
+      width: calc(100vw - 90px);
       height: 100vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
       z-index: 1;
     }
 
-    /* Contenitore della Materia Fotografia dentro la Gabbia */
-    .flesh-container {
-      position: absolute;
-      width: 280px;
-      height: 380px;
-      z-index: 2;
-      pointer-events: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: transform 0.1s ease-out;
+    .main-feed::-webkit-scrollbar {
+      display: none;
     }
 
-    .flesh-image {
+    /* Sezione Hero (Prima Foto a tutto schermo) */
+    .hero-section {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: 4rem;
+    }
+
+    .hero-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: contrast(250%) grayscale(80%) hue-rotate(320deg) invert(10%) blur(2px);
-      mix-blend-mode: screen;
-      opacity: 0.85;
-      transition: filter 0.5s ease, transform 0.3s ease, opacity 0.5s ease;
-      transform: scale(0.9) skewY(2deg);
+      filter: brightness(0.65) contrast(130%) grayscale(60%);
+      z-index: -1;
+      transition: filter 0.6s ease;
     }
 
-    /* Stato di Rivelazione (Quando il soggetto viene liberato) */
-    body.revealed .flesh-image {
-      filter: contrast(100%) grayscale(0%) hue-rotate(0deg) blur(0px);
-      mix-blend-mode: normal;
-      opacity: 1;
-      transform: scale(1) skewY(0deg);
+    .hero-bg:hover {
+      filter: brightness(0.85) contrast(110%) grayscale(0%);
     }
 
-    body.revealed canvas {
-      filter: invert(100%) contrast(500%);
-      opacity: 0.15;
-    }
-
-    /* Testo Ermetico / Sovraimpressione */
-    .hermetic-text {
-      position: absolute;
-      bottom: 3rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      font-size: 0.7rem;
+    .hero-title {
+      color: #fff;
+      font-size: 0.85rem;
       letter-spacing: 4px;
-      color: #444;
       text-transform: uppercase;
-      text-align: center;
-      pointer-events: none;
-      transition: color 0.5s ease;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 0.8rem 1.5rem;
+      border-left: 2px solid #555;
     }
 
-    body.revealed .hermetic-text {
-      color: #aaa;
+    /* Contenuto interno al progetto che emerge durante lo scroll */
+    .project-body {
+      padding: 8rem 4rem 12rem 4rem;
+      background: #030303;
+      display: flex;
+      flex-direction: column;
+      gap: 6rem;
+      max-width: 1100px;
     }
 
-    /* Contatore di Stato Isolato */
-    .index-indicator {
+    .editorial-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .editorial-block img {
+      width: 100%;
+      height: auto;
+      max-height: 85vh;
+      object-fit: cover;
+      border: 1px solid #151515;
+      filter: brightness(0.8) contrast(120%);
+    }
+
+    .editorial-text {
+      font-size: 0.8rem;
+      line-height: 1.8;
+      color: #777;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      max-width: 650px;
+      border-left: 1px solid #222;
+      padding-left: 1.5rem;
+    }
+
+    /* STRISCIA LATERALE A DESTRA (Thumbnails) */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 90px;
+      height: 100vh;
+      background: #000;
+      border-left: 1px solid #111;
+      z-index: 100;
+      overflow-y: auto;
+      scrollbar-width: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 0;
+      gap: 1.2rem;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .thumb-item {
+      width: 60px;
+      height: 85px;
+      position: relative;
+      cursor: pointer;
+      opacity: 0.35;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+      flex-shrink: 0;
+    }
+
+    .thumb-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(100%);
+    }
+
+    .thumb-item:hover {
+      opacity: 0.8;
+    }
+
+    .thumb-item.active {
+      opacity: 1;
+      border-color: #666;
+    }
+
+    .thumb-item.active img {
+      filter: grayscale(0%);
+    }
+
+    .thumb-label {
       position: absolute;
-      top: 3rem;
-      right: 3rem;
-      font-size: 0.65rem;
-      color: #333;
-      letter-spacing: 2px;
-      z-index: 10;
+      bottom: -1.2rem;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 0.5rem;
+      color: #444;
+      letter-spacing: 1px;
     }
   </style>
 </head>
 <body>
 
-  <div class="index-indicator" id="indicator">SPECIMEN // 01</div>
+  <!-- AREA PRINCIPALE (A Sinistra) -->
+  <main class="main-feed" id="mainFeed">
+    
+    <!-- Immagine di copertina a tutto schermo -->
+    <section class="hero-section">
+      <img id="heroBg" class="hero-bg" src="" alt="Cover">
+      <div class="hero-title" id="heroTitle"></div>
+    </section>
 
-  <canvas id="cageCanvas"></canvas>
+    <!-- Contenuto dettagliato a scorrimento -->
+    <section class="project-body" id="projectBody">
+      <!-- Il contenuto visivo ed ermetico viene inserito dinamicamente -->
+    </section>
 
-  <div class="flesh-container" id="fleshContainer">
-    <img id="fleshImage" class="flesh-image" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="Organism">
-  </div>
+  </main>
 
-  <div class="hermetic-text" id="hermeticText">
-    [ TRATTENERE LA MATERIA PER RIVELARE ]
-  </div>
+  <!-- COLONNA THUMBNAIL (A Destra) -->
+  <aside class="sidebar" id="sidebar">
+    <!-- Generata da JavaScript -->
+  </aside>
 
   <script>
-    // Archivio Frammenti
-    const archives = [
+    // Archivio Progetti
+    const projects = [
       {
-        img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000',
-        text: 'CORPO N.1 // DEFORMAZIONE DELLA STRUTTURA LUMINOSA'
+        id: 'SEC_01',
+        title: 'ESTRAZIONE 01 // TORSIONE E MATERIA LUMINOSA',
+        cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200',
+        content: [
+          {
+            type: 'text',
+            value: 'Studio viscerale della luce radente su superfici industriali scomposizioni e ombre profonde.'
+          },
+          {
+            type: 'image',
+            value: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1200'
+          },
+          {
+            type: 'text',
+            value: 'Assenza di colore primario. Dominanza dei grigi ossidati e saturazione controllata.'
+          },
+          {
+            type: 'image',
+            value: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1200'
+          }
+        ]
       },
       {
-        img: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000',
-        text: 'CORPO N.2 // SILENZIO RIGIDO DENTRO LA SPAZIALITÀ'
+        id: 'SEC_02',
+        title: 'ESTRAZIONE 02 // SPAZIO ISOLATO E SILENZIO',
+        cover: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200',
+        content: [
+          {
+            type: 'text',
+            value: 'Rilievi su geometrie architettoniche deserte e superfici prive di presenza umana.'
+          },
+          {
+            type: 'image',
+            value: 'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1200'
+          }
+        ]
       },
       {
-        img: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000',
-        text: 'CORPO N.3 // ISOLAMENTO ARCHITETTONICO'
+        id: 'SEC_03',
+        title: 'ESTRAZIONE 03 // MONOLITI E MONOCROMO',
+        cover: 'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1200',
+        content: [
+          {
+            type: 'image',
+            value: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200'
+          },
+          {
+            type: 'text',
+            value: 'Frequenze visive ridotte all’essenziale. Strutture portanti svelate dal buio.'
+          }
+        ]
       },
       {
-        img: 'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000',
-        text: 'CORPO N.4 // RUMORE OSSIDATO IN AMBIENTE CHIUSO'
+        id: 'SEC_04',
+        title: 'ESTRAZIONE 04 // NOISE E RUMORE FOTOGRAFICO',
+        cover: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1200',
+        content: [
+          {
+            type: 'text',
+            value: 'Grana spessa ed esposizioni estreme su pellicola chimica.'
+          },
+          {
+            type: 'image',
+            value: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200'
+          }
+        ]
       }
     ];
 
-    let currentIndex = 0;
-    let isHolding = false;
-    let holdTimer = null;
+    let activeProjectIndex = 0;
 
-    const fleshImage = document.getElementById('fleshImage');
-    const fleshContainer = document.getElementById('fleshContainer');
-    const hermeticText = document.getElementById('hermeticText');
-    const indicator = document.getElementById('indicator');
+    const mainFeed = document.getElementById('mainFeed');
+    const heroBg = document.getElementById('heroBg');
+    const heroTitle = document.getElementById('heroTitle');
+    const projectBody = document.getElementById('projectBody');
+    const sidebar = document.getElementById('sidebar');
 
-    // Setup Canvas 3D per la Gabbia
-    const canvas = document.getElementById('cageCanvas');
-    const ctx = canvas.getContext('2d');
+    // Inizializza la colonna laterale con le miniature
+    function initSidebar() {
+      sidebar.innerHTML = '';
+      projects.forEach((proj, idx) => {
+        const item = document.createElement('div');
+        item.className = `thumb-item ${idx === activeProjectIndex ? 'active' : ''}`;
+        item.onclick = () => selectProject(idx);
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+        const img = document.createElement('img');
+        img.src = proj.cover;
 
-    // Geometria dei vertici della gabbia prospettica
-    let mouseX = 0, mouseY = 0;
-    let targetRotX = 0, targetRotY = 0;
-    let rotX = 0, rotY = 0;
+        const label = document.createElement('span');
+        label.className = 'thumb-label';
+        label.innerText = proj.id;
 
-    window.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
-      mouseY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
-
-      targetRotY = mouseX * 0.5;
-      targetRotX = -mouseY * 0.5;
-
-      // Deforma leggermente la carne interna al movimento
-      if (!isHolding) {
-        const skew = mouseX * 15;
-        const scale = 0.85 + Math.abs(mouseY) * 0.1;
-        fleshContainer.style.transform = `translate(-50%, -50%) rotateY(${mouseX * 20}deg) skew(${skew}deg) scale(${scale})`;
-      }
-    });
-
-    // Punti 3D di un cubo/gabbia allungato
-    const nodes = [
-      [-120, -180, -120], [120, -180, -120], [120, 180, -120], [-120, 180, -120],
-      [-120, -180, 120],  [120, -180, 120],  [120, 180, 120],  [-120, 180, 120]
-    ];
-
-    const edges = [
-      [0,1], [1,2], [2,3], [3,0],
-      [4,5], [5,6], [6,7], [7,4],
-      [0,4], [1,5], [2,6], [3,7]
-    ];
-
-    function project(x, y, z) {
-      const fov = 400;
-      const scale = fov / (fov + z + 300);
-      return {
-        x: x * scale + window.innerWidth / 2,
-        y: y * scale + window.innerHeight / 2,
-        scale: scale
-      };
-    }
-
-    function drawCage() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      rotX += (targetRotX - rotX) * 0.05;
-      rotY += (targetRotY - rotY) * 0.05;
-
-      const projected = [];
-
-      nodes.forEach(node => {
-        // Rotazione Y
-        let x = node[0] * Math.cos(rotY) - node[2] * Math.sin(rotY);
-        let z = node[0] * Math.sin(rotY) + node[2] * Math.cos(rotY);
-        let y = node[1];
-
-        // Rotazione X
-        let y2 = y * Math.cos(rotX) - z * Math.sin(rotX);
-        let z2 = y * Math.sin(rotX) + z * Math.cos(rotX);
-
-        projected.push(project(x, y2, z2));
+        item.appendChild(img);
+        item.appendChild(label);
+        sidebar.appendChild(item);
       });
-
-      // Disegna i bordi della gabbia
-      ctx.lineWidth = isHolding ? 2 : 0.8;
-      ctx.strokeStyle = isHolding ? 'rgba(255, 255, 255, 0.9)' : 'rgba(80, 80, 80, 0.4)';
-
-      edges.forEach(edge => {
-        const p1 = projected[edge[0]];
-        const p2 = projected[edge[1]];
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
-      });
-
-      // Posiziona il contenitore fotografico esattamente al centro
-      fleshContainer.style.left = `${window.innerWidth / 2}px`;
-      fleshContainer.style.top = `${window.innerHeight / 2}px`;
-
-      requestAnimationFrame(drawCage);
     }
 
-    drawCage();
+    // Carica il progetto selezionato
+    function selectProject(index) {
+      activeProjectIndex = index;
+      const proj = projects[index];
 
-    // Meccanica di Interazione: Pressione / Selezione
-    window.addEventListener('mousedown', () => {
-      isHolding = true;
-      document.body.classList.add('revealed');
-      fleshContainer.style.transform = `translate(-50%, -50%) scale(1)`;
-      hermeticText.innerText = archives[currentIndex].text;
-    });
+      // Aggiorna Sidebar
+      initSidebar();
 
-    window.addEventListener('mouseup', () => {
-      isHolding = false;
-      document.body.classList.remove('revealed');
-      hermeticText.innerText = '[ TRATTENERE LA MATERIA PER RIVELARE ]';
-    });
-
-    // Cambio di Specimen (Cambio opera) con Scroll
-    window.addEventListener('wheel', (e) => {
-      if (e.deltaY > 0) {
-        currentIndex = (currentIndex + 1) % archives.length;
-      } else {
-        currentIndex = (currentIndex - 1 + archives.length) % archives.length;
-      }
-
-      // Piccola deformazione durante la transizione
-      fleshImage.style.opacity = '0';
+      // Transizione fluida della copertina
+      heroBg.style.opacity = '0';
       setTimeout(() => {
-        fleshImage.src = archives[currentIndex].img;
-        indicator.innerText = `SPECIMEN // 0${currentIndex + 1}`;
-        fleshImage.style.opacity = '0.85';
+        heroBg.src = proj.cover;
+        heroTitle.innerText = proj.title;
+        heroBg.style.opacity = '1';
       }, 200);
-    });
+
+      // Svuota e riempie il corpo del progetto
+      projectBody.innerHTML = '';
+      proj.content.forEach(item => {
+        const block = document.createElement('div');
+        block.className = 'editorial-block';
+
+        if (item.type === 'text') {
+          const p = document.createElement('p');
+          p.className = 'editorial-text';
+          p.innerText = item.value;
+          block.appendChild(p);
+        } else if (item.type === 'image') {
+          const img = document.createElement('img');
+          img.src = item.value;
+          block.appendChild(img);
+        }
+
+        projectBody.appendChild(block);
+      });
+
+      // Riporta lo scroll in cima
+      mainFeed.scrollTop = 0;
+    }
+
+    // Avvio
+    selectProject(0);
   </script>
 </body>
 </html>
