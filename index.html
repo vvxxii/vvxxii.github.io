@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VVXXII</title>
+  
+  <!-- Font Sans-Serif Elegante, Geometrico e Ricercato -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Libreria WebGL per Materiali Riflettenti e Icosaedro 3D -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -14,63 +23,31 @@
     body {
       background-color: #000;
       color: #888;
-      font-family: 'Courier New', Courier, monospace;
+      font-family: 'Space Grotesk', sans-serif;
       height: 100vh;
       width: 100vw;
       overflow: hidden;
     }
 
-    /* VIEWPORT POLIEDRO 3D */
-    .polyhedron-stage {
+    /* TELA THREE.JS PER ICOSAEDRO 3D */
+    #webgl-canvas {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      perspective: 1000px;
       z-index: 10;
+      cursor: grab;
       transition: opacity 0.8s ease, filter 0.8s ease;
     }
 
-    .polyhedron-stage.hidden {
+    #webgl-canvas:active {
+      cursor: grabbing;
+    }
+
+    #webgl-canvas.hidden {
       opacity: 0;
       filter: blur(20px) contrast(300%);
-      pointer-events: none;
-    }
-
-    .polyhedron {
-      width: 260px;
-      height: 260px;
-      position: relative;
-      transform-style: preserve-3d;
-      cursor: pointer;
-    }
-
-    .face {
-      position: absolute;
-      width: 260px;
-      height: 260px;
-      background: #050505;
-      border: 1px solid #222;
-      overflow: hidden;
-      opacity: 0.85;
-      transition: border-color 0.3s, opacity 0.3s;
-      backface-visibility: visible;
-    }
-
-    .face:hover {
-      border-color: #888;
-      opacity: 1;
-    }
-
-    .face img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: grayscale(100%) contrast(140%) brightness(0.7);
       pointer-events: none;
     }
 
@@ -93,7 +70,7 @@
       pointer-events: auto;
     }
 
-    /* SCROLL IMMAGINI (SOTTO) */
+    /* LIVELLO SCROLL IMMAGINI (A TUTTO SCHERMO IN SOTTOFONDO) */
     .image-scroll-layer {
       position: absolute;
       top: 0;
@@ -117,156 +94,230 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: brightness(0.75) contrast(120%);
+      filter: brightness(0.7) contrast(125%) grayscale(40%);
     }
 
-    /* SCROLL TESTO (SOPRA - IN ROSSO) */
+    /* LIVELLO SCROLL TESTO (COLONNA VERTICALE A DESTRA) */
     .text-scroll-layer {
       position: absolute;
       top: 0;
-      left: 8vw;
-      width: 38vw;
+      right: 5vw;
+      width: 380px;
       height: 100vh;
       overflow-y: auto;
       scrollbar-width: none;
       z-index: 2;
-      padding: 35vh 0;
+      padding: 25vh 0;
       pointer-events: auto;
     }
 
     .text-scroll-layer::-webkit-scrollbar { display: none; }
 
     .red-text-content {
-      color: #b30000;
+      color: #c40000;
       font-size: 0.85rem;
-      line-height: 1.9;
+      font-weight: 400;
+      line-height: 2.1;
       letter-spacing: 2px;
       text-transform: uppercase;
-      text-shadow: 0 0 8px rgba(179, 0, 0, 0.4);
-      /* Nessuno sfondo */
+      text-align: justify;
       background: transparent;
+      text-shadow: 0 0 12px rgba(196, 0, 0, 0.35);
     }
 
-    /* PULSANTE CHIUSURA / RETRATTICO */
+    /* PULSANTE RETRATTICO / CHIUSURA */
     .close-btn {
       position: fixed;
-      top: 2rem;
-      right: 2rem;
-      color: #555;
-      font-size: 0.7rem;
-      letter-spacing: 3px;
+      top: 2.5rem;
+      left: 3rem;
+      color: #666;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 4px;
       cursor: pointer;
       z-index: 100;
       background: transparent;
       border: none;
       text-transform: uppercase;
+      transition: color 0.3s ease;
     }
 
     .close-btn:hover {
-      color: #b30000;
+      color: #c40000;
     }
   </style>
 </head>
 <body>
 
-  <div class="polyhedron-stage" id="polyStage">
-    <div class="polyhedron" id="polyhedron">
-      
-      <div class="face" style="transform: rotateY(0deg) translateZ(130px);" onclick="openProject(0)">
-        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="">
-      </div>
-      <div class="face" style="transform: rotateY(90deg) translateZ(130px);" onclick="openProject(1)">
-        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000" alt="">
-      </div>
-      <div class="face" style="transform: rotateY(180deg) translateZ(130px);" onclick="openProject(2)">
-        <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000" alt="">
-      </div>
-      <div class="face" style="transform: rotateY(-90deg) translateZ(130px);" onclick="openProject(3)">
-        <img src="https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000" alt="">
-      </div>
-      <div class="face" style="transform: rotateX(90deg) translateZ(130px);" onclick="openProject(0)">
-        <img src="https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000" alt="">
-      </div>
-      <div class="face" style="transform: rotateX(-90deg) translateZ(130px);" onclick="openProject(1)">
-        <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000" alt="">
-      </div>
+  <!-- CANVAS 3D ICOSAEDRO -->
+  <canvas id="webgl-canvas"></canvas>
 
-    </div>
-  </div>
-
+  <!-- STAGE PROGETTO -->
   <div class="project-stage" id="projectStage">
     <button class="close-btn" onclick="closeProject()">[ REGRESS ]</button>
 
+    <!-- LIVELLO IMMAGINI (SOTTO) -->
+    <div class="image-scroll-layer" id="imageLayer"></div>
+
+    <!-- LIVELLO TESTO ROSSO (COLONNA A DESTRA) -->
     <div class="text-scroll-layer" id="textLayer">
       <div class="red-text-content" id="redText"></div>
     </div>
-
-    <div class="image-scroll-layer" id="imageLayer"></div>
   </div>
 
   <script>
-    // ARCHIVIO PROGETTI
+    // ARCHIVIO PROGETTI CON TESTI LUNGHI PER TESTARE LO SCROLL
     const projects = [
       {
-        text: "Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Registro di decomposizione estetica.",
+        text: "Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Registro di decomposizione estetica. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia.",
         images: [
           'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
           'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600',
-          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600'
-        ]
-      },
-      {
-        text: "Spazio geologico corretto. Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa.",
-        images: [
-          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
-          'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600'
-        ]
-      },
-      {
-        text: "Rumore chimico su pellicola arida. Esperimento di saturazione e desaturazione viscerale. Sequenza di fotogrammi rimasti sepolti.",
-        images: [
           'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600',
           'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600'
         ]
       },
       {
-        text: "Traccia residuale. Studio di un interno vuoto sotto illuminazione fredda isolata.",
+        text: "Spazio geologico corretto. Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva.",
         images: [
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
           'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600',
           'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600'
         ]
       }
     ];
 
-    // ROTAZIONE CASUALE DEL POLIEDRO
-    const poly = document.getElementById('polyhedron');
-    let rotX = 0;
-    let rotY = 0;
-    let rotZ = 0;
+    // --- SETUP THREE.JS (ICOSAEDRO METALLICO & RIFLETTENTE) ---
+    const canvas = document.getElementById('webgl-canvas');
+    const scene = new THREE.Scene();
+    
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 6;
 
-    let speedX = (Math.random() - 0.5) * 0.4;
-    let speedY = (Math.random() - 0.5) * 0.4;
-    let speedZ = (Math.random() - 0.5) * 0.2;
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    function animatePolyhedron() {
-      rotX += speedX;
-      rotY += speedY;
-      rotZ += speedZ;
+    // GEOMETRIA ICOSAEDRO (20 Facce)
+    const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
-      // Modifica impercettibilmente la traiettoria per creare un movimento organico/randomico
-      if (Math.random() < 0.01) {
-        speedX += (Math.random() - 0.5) * 0.05;
-        speedY += (Math.random() - 0.5) * 0.05;
+    // MATERIALE RIFLETTENTE (Bassa Roughness / Alta Metallicità / Lucido)
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x111111,
+      metalness: 0.95,
+      roughness: 0.08, // Estremamente lucido e riflettente
+      transparent: true,
+      opacity: 0.85,
+      flatShading: true
+    });
+
+    const icosahedron = new THREE.Mesh(geometry, material);
+    scene.add(icosahedron);
+
+    // BORDER FRAME (Bordi sottili bianchi/luminosi)
+    const wireframeGeo = new THREE.WireframeGeometry(geometry);
+    const wireframeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
+    const wireframe = new THREE.LineSegments(wireframeGeo, wireframeMat);
+    icosahedron.add(wireframe);
+
+    // LUCI (Luce d'impatto ad alto contrasto)
+    const light1 = new THREE.DirectionalLight(0xffffff, 2.5);
+    light1.position.set(5, 5, 5);
+    scene.add(light1);
+
+    const light2 = new THREE.DirectionalLight(0x444444, 1.5);
+    light2.position.set(-5, -5, -2);
+    scene.add(light2);
+
+    const ambientLight = new THREE.AmbientLight(0x050505);
+    scene.add(ambientLight);
+
+    // CONTROLLO ROTAZIONE DRAG MOUSE & INTERAZIONE
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let autoRotateSpeedX = 0.003;
+    let autoRotateSpeedY = 0.005;
+
+    window.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const deltaMove = {
+        x: e.clientX - previousMousePosition.x,
+        y: e.clientY - previousMousePosition.y
+      };
+
+      icosahedron.rotation.y += deltaMove.x * 0.008;
+      icosahedron.rotation.x += deltaMove.y * 0.008;
+
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // TOUCH SUPPORT
+    window.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      const deltaMove = {
+        x: e.touches[0].clientX - previousMousePosition.x,
+        y: e.touches[0].clientY - previousMousePosition.y
+      };
+
+      icosahedron.rotation.y += deltaMove.x * 0.008;
+      icosahedron.rotation.x += deltaMove.y * 0.008;
+
+      previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    });
+
+    window.addEventListener('touchend', () => { isDragging = false; });
+
+    // CLICK SULL'ICOSAEDRO PER APRIRE PROGETTO
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    window.addEventListener('click', (e) => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(icosahedron);
+
+      if (intersects.length > 0) {
+        // Sceglie casualmente o sequenzialmente un progetto dall'archivio
+        const randomProjectIndex = Math.floor(Math.random() * projects.length);
+        openProject(randomProjectIndex);
+      }
+    });
+
+    // LOOP DI RENDERING ANIMAZIONE
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (!isDragging) {
+        icosahedron.rotation.x += autoRotateSpeedX;
+        icosahedron.rotation.y += autoRotateSpeedY;
       }
 
-      poly.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`;
-      requestAnimationFrame(animatePolyhedron);
+      renderer.render(scene, camera);
     }
+    animate();
 
-    animatePolyhedron();
+    // RESIZE RESPONSIVO
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
-    // APERTURA ED ESPLORAZIONE PROGETTI
-    const polyStage = document.getElementById('polyStage');
+    // --- LOGICA APERTURA / CHIUSURA PROGETTI ---
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
@@ -274,7 +325,6 @@
     function openProject(index) {
       const proj = projects[index];
 
-      // Svuota e riempie lo scroll immagini
       imageLayer.innerHTML = '';
       proj.images.forEach(url => {
         const block = document.createElement('div');
@@ -285,11 +335,9 @@
         imageLayer.appendChild(block);
       });
 
-      // Inserisce il testo rosso
       redText.innerText = proj.text;
 
-      // Transizione di stato
-      polyStage.classList.add('hidden');
+      canvas.classList.add('hidden');
       setTimeout(() => {
         projectStage.classList.add('active');
       }, 400);
@@ -298,7 +346,7 @@
     function closeProject() {
       projectStage.classList.remove('active');
       setTimeout(() => {
-        polyStage.classList.remove('hidden');
+        canvas.classList.remove('hidden');
       }, 300);
     }
   </script>
