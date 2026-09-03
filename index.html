@@ -117,7 +117,6 @@
       text-shadow: 0 0 6px rgba(184, 0, 0, 0.35);
     }
 
-    /* PULSANTE X CHIUSURA */
     .close-btn {
       position: fixed;
       top: 2.5rem;
@@ -144,7 +143,6 @@
   <canvas id="webgl-canvas"></canvas>
 
   <div class="project-stage" id="projectStage">
-    <!-- TASTO X DI CHIUSURA -->
     <button class="close-btn" onclick="closeProject()">✕</button>
 
     <div class="image-scroll-layer" id="imageLayer"></div>
@@ -187,52 +185,70 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // MAPPATURA FOTOGRAFICA GARANTITA TRAMITE CANVAS NATIVO (NO BLOCCHI CORS)
-    function generatePhotographicTexture() {
+    // GENERATORE DI 20 IMMAGINI SINGOLE E INDIPENDENTI
+    function createFaceTexture(index) {
       const c = document.createElement('canvas');
-      c.width = 1024;
-      c.height = 1024;
+      c.width = 512;
+      c.height = 512;
       const ctx = c.getContext('2d');
 
-      // Foto astratta 1: Architettura monolitica
-      ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, 512, 512);
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(50, 50); ctx.lineTo(450, 50); ctx.lineTo(256, 450); ctx.fill();
-      ctx.fillStyle = '#1a1a1a'; ctx.fillRect(150, 100, 200, 300);
+      // Sfondo scuro a contrasto variazione
+      const bgShade = Math.floor(15 + (index * 8) % 40);
+      ctx.fillStyle = `rgb(${bgShade}, ${bgShade}, ${bgShade})`;
+      ctx.fillRect(0, 0, 512, 512);
 
-      // Foto astratta 2: Contrasto minerale
-      ctx.fillStyle = '#151515'; ctx.fillRect(512, 0, 512, 512);
-      ctx.fillStyle = '#888888'; ctx.beginPath(); ctx.arc(768, 256, 180, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#000000'; ctx.fillRect(512, 256, 512, 256);
+      // Bordo interno tipo "finestra"
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 12;
+      ctx.strokeRect(20, 20, 472, 472);
 
-      // Foto astratta 3: Linee di struttura
-      ctx.fillStyle = '#050505'; ctx.fillRect(0, 512, 512, 512);
-      ctx.fillStyle = '#cccccc';
-      for(let i=0; i<10; i++) {
-        ctx.fillRect(50 + (i*40), 550, 20, 400);
+      // Forme geometriche distinte per ogni faccia
+      ctx.fillStyle = index % 2 === 0 ? '#ffffff' : '#888888';
+      if (index % 3 === 0) {
+        ctx.fillRect(100, 100, 312, 312);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(150, 150, 212, 212);
+      } else if (index % 3 === 1) {
+        ctx.beginPath();
+        ctx.arc(256, 256, 160, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(256, 80);
+        ctx.lineTo(420, 420);
+        ctx.lineTo(92, 420);
+        ctx.closePath();
+        ctx.fill();
       }
 
-      // Foto astratta 4: Tessitura scura
-      ctx.fillStyle = '#222222'; ctx.fillRect(512, 512, 512, 512);
-      ctx.fillStyle = '#ffffff';
-      for(let i=0; i<30; i++) {
-        ctx.fillRect(550 + Math.random()*400, 550 + Math.random()*400, 30, 30);
-      }
+      // Identificativo univoco visibile al centro
+      ctx.fillStyle = index % 2 === 0 ? '#000000' : '#ffffff';
+      ctx.font = 'bold 42px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`0${index + 1}`, 256, 256);
 
       return new THREE.CanvasTexture(c);
     }
 
-    const texture = generatePhotographicTexture();
+    // CREAZIONE GEOMETRIA CON MAPPATURA PER SINGOLA FACCIA
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
-    const material = new THREE.MeshBasicMaterial({
-      map: texture,
-      wireframe: false
-    });
+    // Assegna ad ogni faccia (gruppo di triangoli) un indice unico
+    const materials = [];
+    const faceCount = geometry.attributes.position.count / 3; // 20 facce
 
-    const icosahedron = new THREE.Mesh(geometry, material);
+    geometry.clearGroups();
+    for (let i = 0; i < faceCount; i++) {
+      geometry.addGroup(i * 3, 3, i);
+      const texture = createFaceTexture(i);
+      materials.push(new THREE.MeshBasicMaterial({ map: texture }));
+    }
+
+    const icosahedron = new THREE.Mesh(geometry, materials);
     scene.add(icosahedron);
 
-    // SISTEMA DI ROTAZIONE HOVER + INERZIA
+    // ROTAZIONE HOVER CON INERZIA
     let isHovered = false;
     let velocityX = 0;
     let velocityY = 0;
@@ -269,7 +285,7 @@
       }
     });
 
-    // CLICK PER MORPHING FULL SCREEN
+    // CLICK FULL-SCREEN
     window.addEventListener('click', (e) => {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -312,7 +328,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // APERTURA E CHIUSURA MODALE
+    // APERTURA / CHIUSURA STAGE
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
