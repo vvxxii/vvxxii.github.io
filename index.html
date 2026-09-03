@@ -40,6 +40,7 @@
       pointer-events: none;
     }
 
+    /* vignettatura globale + atmosfera dungeon */
     #vignette {
       position: fixed; inset: 0;
       z-index: 20;
@@ -48,6 +49,7 @@
       mix-blend-mode: multiply;
     }
 
+    /* grana pellicola / rumore che flickera */
     #grain {
       position: fixed; inset: 0;
       z-index: 21;
@@ -171,6 +173,7 @@
       }
     ];
 
+    // pool di immagini reali da distribuire sulle 20 facce dell'icosaedro
     const facePool = [
       'https://picsum.photos/id/1025/700/700','https://picsum.photos/id/1040/700/700',
       'https://picsum.photos/id/1062/700/700','https://picsum.photos/id/1069/700/700',
@@ -184,6 +187,7 @@
       'https://picsum.photos/id/237/700/700','https://picsum.photos/id/244/700/700'
     ];
 
+    // THREE.JS SETUP
     const canvas = document.getElementById('webgl-canvas');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x000000, 0.16);
@@ -195,6 +199,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+    // luce fioca da "torcia" che pulsa, tipico horror-dungeon
     const ambient = new THREE.AmbientLight(0x220a0a, 0.55);
     scene.add(ambient);
 
@@ -206,6 +211,8 @@
     rim.position.set(-3, -2, -2);
     scene.add(rim);
 
+    // costruisce una texture da una FOTO REALE, con vignettatura (bordi -> trasparenti,
+    // per fondere lo spigolo col nero) + leggero glitch/aberrazione cromatica
     function buildFaceTexture(url, seed) {
       return new Promise((resolve) => {
         const size = 512;
@@ -216,35 +223,37 @@
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
-          // Riduzione proporzionale dell'immagine disegnata dentro la faccia
-          const drawSize = size * 0.65;
-          const offset = (size - drawSize) / 2;
+          // cover-fit
+          const scale = Math.max(size / img.width, size / img.height);
+          const w = img.width * scale, h = img.height * scale;
+          const x = (size - w) / 2, y = (size - h) / 2;
 
-          ctx.filter = 'grayscale(55%) contrast(130%) brightness(0.55)';
-          ctx.drawImage(img, offset, offset, drawSize, drawSize);
+          // strato base: bianco e nero totale, basso contrasto per un che di "spento"
+          ctx.filter = 'grayscale(100%) contrast(120%) brightness(0.75)';
+          ctx.drawImage(img, x, y, w, h);
           ctx.filter = 'none';
 
+          // aberrazione cromatica leggera (solo per il glitch, non tinge l'immagine a riposo)
           ctx.globalCompositeOperation = 'screen';
-          ctx.globalAlpha = 0.18;
-          ctx.drawImage(img, offset - 3, offset, drawSize, drawSize);
-          ctx.globalAlpha = 0.12;
-          ctx.drawImage(img, offset + 3, offset, drawSize, drawSize);
+          ctx.globalAlpha = 0.10;
+          ctx.drawImage(img, x - 4, y, w, h);
+          ctx.globalAlpha = 0.07;
+          ctx.drawImage(img, x + 4, y, w, h);
           ctx.globalAlpha = 1;
           ctx.globalCompositeOperation = 'source-over';
 
-          ctx.globalAlpha = 0.06;
+          // scanline sottili
+          ctx.globalAlpha = 0.05;
           ctx.fillStyle = '#000';
           for (let i = 0; i < size; i += 3) ctx.fillRect(0, i, size, 1);
           ctx.globalAlpha = 1;
 
-          ctx.globalCompositeOperation = 'multiply';
-          ctx.fillStyle = 'rgba(90,15,15,0.35)';
-          ctx.fillRect(0, 0, size, size);
-          ctx.globalCompositeOperation = 'source-over';
-
-          const grad = ctx.createRadialGradient(size/2, size/2, size*0.05, size/2, size/2, size*0.55);
+          // VIGNETTATURA -> alfa: il centro resta visibile, i bordi diventano trasparenti.
+          // Fondendosi col nero di sfondo, lo spigolo triangolare "scompare": effetto eterei,
+          // spigoli morbidi anziché taglienti.
+          const grad = ctx.createRadialGradient(size/2, size/2, size*0.05, size/2, size/2, size*0.62);
           grad.addColorStop(0, 'rgba(255,255,255,1)');
-          grad.addColorStop(0.6, 'rgba(255,255,255,0.85)');
+          grad.addColorStop(0.65, 'rgba(255,255,255,0.85)');
           grad.addColorStop(1, 'rgba(255,255,255,0)');
           ctx.globalCompositeOperation = 'destination-in';
           ctx.fillStyle = grad;
@@ -254,13 +263,11 @@
           const tex = new THREE.CanvasTexture(c);
           tex.wrapS = THREE.RepeatWrapping;
           tex.wrapT = THREE.RepeatWrapping;
-          // Riduzione aggiuntiva della texture e centratura
-          tex.repeat.set(1.8, 1.8);
-          tex.offset.set(-0.4, -0.4);
           tex.needsUpdate = true;
           resolve(tex);
         };
         img.onerror = () => {
+          // fallback: rettangolo scuro se l'immagine non carica
           ctx.fillStyle = '#0a0a0a';
           ctx.fillRect(0, 0, size, size);
           resolve(new THREE.CanvasTexture(c));
@@ -270,7 +277,7 @@
     }
 
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
-    const faceCount = geometry.attributes.position.count / 3;
+    const faceCount = geometry.attributes.position.count / 3; // 20 facce, geometria non indicizzata
 
     geometry.clearGroups();
     const materials = [];
@@ -279,13 +286,15 @@
       const mat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0.9,
-        roughness: 0.85,
-        metalness: 0.1,
+        opacity: 0.4,
+        roughness: 0.9,
+        metalness: 0.05,
         emissive: 0x1a0505,
-        emissiveIntensity: 0.4,
-        depthWrite: true
+        emissiveIntensity: 0.25,
+        depthWrite: false
       });
+      mat.userData.baseOpacity = 0.4;
+      mat.userData.baseEmissive = 0.25;
       materials.push(mat);
 
       buildFaceTexture(facePool[i % facePool.length], i).then(tex => {
@@ -297,10 +306,19 @@
     const icosahedron = new THREE.Mesh(geometry, materials);
     scene.add(icosahedron);
 
-    // ROTAZIONE HOVER - MOVIMENTI MINIMI E RAPIDI
+    // ROTAZIONE HOVER CON INERZIA
     let isHovered = false;
     let velocityX = 0, velocityY = 0;
     let previousMouseX = 0, previousMouseY = 0;
+
+    // faccia attualmente sotto il mouse (null se nessuna / mouse fuori dal solido)
+    let currentHoverFace = null;
+    // valore corrente di "glow" per ogni faccia: sale quando entra in hover,
+    // scende quando esce o cambia faccia. Ogni faccia ha la propria coda
+    // indipendente, quindi più sfumature possono sovrapporsi nel tempo.
+    const faceGlow = new Array(faceCount).fill(0);
+    const RISE_RATE = 10.0;  // attacco rapido
+    const FALL_RATE = 2.2;   // coda più lenta, "gaussiana"
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -313,6 +331,8 @@
       const intersects = raycaster.intersectObject(icosahedron);
 
       if (intersects.length > 0) {
+        currentHoverFace = intersects[0].faceIndex;
+
         if (!isHovered) {
           isHovered = true;
           previousMouseX = e.clientX;
@@ -320,14 +340,14 @@
         } else {
           const deltaX = e.clientX - previousMouseX;
           const deltaY = e.clientY - previousMouseY;
-          // Impulso più marcato ma reattivo
-          velocityY = deltaX * 0.009;
-          velocityX = deltaY * 0.009;
+          velocityY = deltaX * 0.004;
+          velocityX = deltaY * 0.004;
           previousMouseX = e.clientX;
           previousMouseY = e.clientY;
         }
       } else {
         isHovered = false;
+        currentHoverFace = null; // esce dal solido -> tutte le facce iniziano a scendere
       }
     });
 
@@ -347,26 +367,28 @@
       }
     });
 
+    // GLITCH: sfarfallio rapido e convulso, tipo battito d'ali di mosca.
+    // Cicli brevissimi e irregolari, più facce coinvolte insieme, escursioni forti.
     let glitchClock = 0;
+    let nextGlitchAt = 0.02;
+    // stato di jitter "residuo" per faccia, decade velocemente da solo
+    const glitchJitter = new Array(faceCount).fill(0);
+
     function applyGlitch(dt) {
       glitchClock += dt;
-      if (glitchClock < 0.12) return;
+      if (glitchClock < nextGlitchAt) return;
       glitchClock = 0;
+      // intervallo prossimo battito: molto corto e irregolare (18-55ms)
+      nextGlitchAt = 0.018 + Math.random() * 0.037;
 
-      materials.forEach((mat) => {
-        mat.opacity = 0.9;
-        mat.emissiveIntensity = 0.4;
-        if (mat.map) { mat.map.offset.set(-0.4, -0.4); }
-      });
-
-      const glitchCount = 1 + Math.floor(Math.random() * 2);
+      // ogni battito colpisce diverse facce contemporaneamente, in modo brusco
+      const glitchCount = 2 + Math.floor(Math.random() * 4);
       for (let g = 0; g < glitchCount; g++) {
-        const idx = Math.floor(Math.random() * materials.length);
+        const idx = Math.floor(Math.random() * faceCount);
+        glitchJitter[idx] = 1;
         const mat = materials[idx];
-        mat.opacity = 0.35 + Math.random() * 0.4;
-        mat.emissiveIntensity = 0.8 + Math.random() * 1.4;
         if (mat.map) {
-          mat.map.offset.set(-0.4 + (Math.random() - 0.5) * 0.06, -0.4 + (Math.random() - 0.5) * 0.06);
+          mat.map.offset.set((Math.random() - 0.5) * 0.14, (Math.random() - 0.5) * 0.14);
         }
       }
     }
@@ -381,18 +403,47 @@
         icosahedron.rotation.y += velocityY;
         icosahedron.rotation.x += velocityX;
       } else {
-        // Inerzia più rapida a smorzarsi (0.88) per fermare il movimento subito
-        velocityY *= 0.88;
-        velocityX *= 0.88;
-        icosahedron.rotation.y += velocityY + 0.005;
-        icosahedron.rotation.x += velocityX + 0.003;
+        velocityY *= 0.95;
+        velocityX *= 0.95;
+        icosahedron.rotation.y += velocityY + 0.004;
+        icosahedron.rotation.x += velocityX + 0.002;
       }
 
+      // torcia che pulsa/tremola, come una fiamma in un dungeon
       torch.intensity = 1.9 + Math.sin(t * 6.0) * 0.35 + Math.sin(t * 17.0) * 0.15 + (Math.random() - 0.5) * 0.2;
       torch.position.x = 2 + Math.sin(t * 0.6) * 0.4;
       torch.position.y = 1.5 + Math.cos(t * 0.5) * 0.3;
 
       applyGlitch(dt);
+
+      // inviluppo glow per-faccia: sale in fretta sulla faccia in hover,
+      // scende più lentamente su tutte le altre (code che possono sovrapporsi)
+      for (let i = 0; i < faceCount; i++) {
+        const target = (currentHoverFace === i) ? 1 : 0;
+        const rate = target > faceGlow[i] ? RISE_RATE : FALL_RATE;
+        faceGlow[i] += (target - faceGlow[i]) * Math.min(1, rate * dt);
+
+        // il jitter del glitch decade molto rapidamente da solo (battito breve)
+        glitchJitter[i] *= Math.max(0, 1 - dt * 14);
+
+        const mat = materials[i];
+        if (!mat) continue;
+
+        // sfumatura gaussiana della selezione: opacità ed emissive salgono/scendono
+        // in modo smorzato invece che a scatti
+        const glow = faceGlow[i];
+        mat.opacity = mat.userData.baseOpacity + glow * 0.5 + glitchJitter[i] * 0.25;
+        mat.emissiveIntensity = mat.userData.baseEmissive + glow * 2.2 + glitchJitter[i] * 1.6;
+        mat.emissive.setRGB(
+          0.10 + glow * 0.55 + glitchJitter[i] * 0.3,
+          0.02 + glow * 0.18,
+          0.02 + glow * 0.10
+        );
+
+        if (mat.map && glitchJitter[i] < 0.02) {
+          mat.map.offset.set(0, 0);
+        }
+      }
 
       renderer.render(scene, camera);
     }
@@ -404,6 +455,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
+    // APERTURA / CHIUSURA STAGE
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
