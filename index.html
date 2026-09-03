@@ -94,7 +94,7 @@
       filter: brightness(0.65) contrast(135%) grayscale(60%);
     }
 
-    /* TIPOGRAFIA MICRO-COMPATTA */
+    /* COLONNA TESTO: PARTE DAL BORDO SUPERIORE */
     .text-scroll-layer {
       position: absolute;
       top: 0;
@@ -104,7 +104,8 @@
       overflow-y: auto;
       scrollbar-width: none;
       z-index: 2;
-      padding: 30vh 0;
+      padding-top: 2.5rem; /* Inizia vicino al bordo alto */
+      padding-bottom: 10vh;
       pointer-events: auto;
     }
 
@@ -112,9 +113,9 @@
 
     .red-text-content {
       color: #b80000;
-      font-size: 0.58rem; /* Font ancora più piccolo */
+      font-size: 0.58rem;
       font-weight: 400;
-      line-height: 1.5;   /* Interlinea ridotta */
+      line-height: 1.5;
       letter-spacing: 1px;
       text-transform: uppercase;
       text-align: justify;
@@ -158,30 +159,28 @@
   </div>
 
   <script>
+    // ARCHIVIO ESTESO CON MOLTE FOTO E TESTO MOLTO LUNGO
     const projects = [
       {
         id: "PROJECT_01",
-        text: "Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Registro di decomposizione estetica. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei.",
+        text: "REGISTRO DI DECOMPOSIZIONE ESTETICA // Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia. Ossidazione visiva e rumore termico registrati lungo i bordi della struttura monolitica. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva. Strati geologici sovrapposti in sequenza asimmetrica. Nessun segnale di ritorno dalla superficie inferiore. Contrazione della massa e alterazione della prospettiva visiva.",
         images: [
           'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
           'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600',
-          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600'
-        ]
-      },
-      {
-        id: "PROJECT_02",
-        text: "Spazio geologico corretto. Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile.",
-        images: [
+          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600',
+          'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600',
           'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
           'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600'
         ]
       },
       {
-        id: "PROJECT_03",
-        text: "Rumore chimico e tossico su pellicola arida. Esperimento di saturazione viscerale. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura. L'oscurità come presenza densa e non riflettente.",
+        id: "PROJECT_02",
+        text: "SPAZIO GEOLOGICO CORRETTO // Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Tracce visive estrapolate da ambienti sotterranei privi di ossigeno. Il frammento fotografico agisce come documento primario di un evento non documentato. Rilievi ad altissimo contrasto per isolare la forma dalla sua funzione originaria.",
         images: [
-          'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600',
-          'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600'
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
+          'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600',
+          'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
+          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600'
         ]
       }
     ];
@@ -197,59 +196,86 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // GENERAZIONE PROCEDURALE TEXTURE PER FACCE ICOSAEDRO (NO PROBLEMI CORS)
-    function generateGlitchTexture() {
+    // GENERAZIONE PROCEDURALE NATIIVA DELLE FOTO CON GLITCH SUGLI SPIGOLI
+    function createPhotographicGlitchTexture() {
       const texCanvas = document.createElement('canvas');
-      texCanvas.width = 512;
-      texCanvas.height = 512;
+      texCanvas.width = 1024;
+      texCanvas.height = 1024;
       const ctx = texCanvas.getContext('2d');
 
-      ctx.fillStyle = '#0a0a0a';
-      ctx.fillRect(0, 0, 512, 512);
+      // Base scura
+      ctx.fillStyle = '#050505';
+      ctx.fillRect(0, 0, 1024, 1024);
 
-      // Sfondi sfumati e grana
-      for (let i = 0; i < 400; i++) {
-        const val = Math.floor(Math.random() * 120);
-        ctx.fillStyle = `rgb(${val},${val},${val})`;
-        ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 60, Math.random() * 4);
+      // Disegno di forme fotografiche e contrasti anatomico-architetturali
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath();
+      ctx.moveTo(100, 0); ctx.lineTo(900, 200); ctx.lineTo(800, 1024); ctx.lineTo(0, 800);
+      ctx.fill();
+
+      ctx.fillStyle = '#444444';
+      ctx.fillRect(200, 150, 600, 300);
+
+      ctx.fillStyle = '#888888';
+      ctx.fillRect(350, 200, 300, 500);
+
+      // GLITCH GRAFICO E OSSIDAZIONE SUGLI SPIGOLI
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      for (let i = 0; i < 80; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const w = Math.random() * 250;
+        const h = Math.random() * 3;
+        ctx.fillRect(x, y, w, h);
       }
 
       ctx.fillStyle = '#ffffff';
-      for (let i = 0; i < 20; i++) {
-        ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 120, 1);
+      for (let i = 0; i < 150; i++) {
+        ctx.fillRect(Math.random() * 1024, Math.random() * 1024, 2, 2);
       }
 
       return new THREE.CanvasTexture(texCanvas);
     }
 
-    const texture = generateGlitchTexture();
+    const texture = createPhotographicGlitchTexture();
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
+    // MATERIALE ROUGHNESS BASSA + EFFETTO SPIGOLI INCISI
     const material = new THREE.MeshStandardMaterial({
       map: texture,
       metalness: 0.9,
-      roughness: 0.12,
+      roughness: 0.1,
       transparent: true,
-      opacity: 0.88,
-      flatShading: true
+      opacity: 0.9,
+      flatShading: true // Mantiene e accentua gli spigoli visibili
     });
 
     const icosahedron = new THREE.Mesh(geometry, material);
     scene.add(icosahedron);
 
+    // SPIGOLI GLITCHATI IN SECONDO LIVELLO
+    const wireframeGeo = new THREE.WireframeGeometry(geometry);
+    const wireframeMat = new THREE.LineBasicMaterial({ 
+      color: 0x666666, 
+      transparent: true, 
+      opacity: 0.35 
+    });
+    const wireframe = new THREE.LineSegments(wireframeGeo, wireframeMat);
+    icosahedron.add(wireframe);
+
     // LUCI
-    const light1 = new THREE.DirectionalLight(0xffffff, 3.0);
+    const light1 = new THREE.DirectionalLight(0xffffff, 3.2);
     light1.position.set(5, 5, 5);
     scene.add(light1);
 
-    const light2 = new THREE.DirectionalLight(0x444444, 1.5);
+    const light2 = new THREE.DirectionalLight(0x333333, 1.5);
     light2.position.set(-5, -5, -2);
     scene.add(light2);
 
     const ambientLight = new THREE.AmbientLight(0x0a0a0a);
     scene.add(ambientLight);
 
-    // DRAG MOUSE
+    // DRAG MOUSE / TOUCH
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
 
@@ -291,12 +317,20 @@
       }
     });
 
+    // ANIMAZIONE ROTAZIONE CON MICRO-GLITCH SUGLI SPIGOLI
     function animate() {
       requestAnimationFrame(animate);
 
       if (!isDragging) {
         icosahedron.rotation.x += 0.0025;
         icosahedron.rotation.y += 0.0045;
+      }
+
+      // Micro-vibrazione glitchata casuale sugli spigoli
+      if (Math.random() < 0.04) {
+        wireframe.position.x = (Math.random() - 0.5) * 0.03;
+      } else {
+        wireframe.position.x = 0;
       }
 
       renderer.render(scene, camera);
