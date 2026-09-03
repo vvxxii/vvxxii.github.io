@@ -117,14 +117,14 @@
       text-shadow: 0 0 6px rgba(184, 0, 0, 0.35);
     }
 
-    /* PULSANTE X PER CHIUSURA */
+    /* PULSANTE X CHIUSURA */
     .close-btn {
       position: fixed;
       top: 2.5rem;
       left: 3rem;
-      color: #777;
+      color: #888;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.2rem;
+      font-size: 1.5rem;
       line-height: 1;
       cursor: pointer;
       z-index: 100;
@@ -144,6 +144,7 @@
   <canvas id="webgl-canvas"></canvas>
 
   <div class="project-stage" id="projectStage">
+    <!-- TASTO X DI CHIUSURA -->
     <button class="close-btn" onclick="closeProject()">✕</button>
 
     <div class="image-scroll-layer" id="imageLayer"></div>
@@ -159,18 +160,18 @@
         id: "PROJECT_01",
         text: "REGISTRO DI DECOMPOSIZIONE ESTETICA // Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia. Ossidazione visiva e rumore termico registrati lungo i bordi della struttura monolitica. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva. Strati geologici sovrapposti in sequenza asimmetrica. Nessun segnale di ritorno dalla superficie inferiore. Contrazione della massa e alterazione della prospettiva visiva. ANALISI STRUTTURALE // Il frammento fotografico agisce come documento primario di un evento non documentato. Rilievi ad altissimo contrasto per isolare la forma dalla sua funzione originaria. Silenzio operativo prolungato nelle sezioni inferiori del monolite. Interfeze ottiche sovrapposte lungo l'asse di propagazione visiva.",
         images: [
-          'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
-          'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600',
-          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600',
-          'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600'
+          'https://picsum.photos/id/1025/1600/1000',
+          'https://picsum.photos/id/1040/1600/1000',
+          'https://picsum.photos/id/1062/1600/1000',
+          'https://picsum.photos/id/1069/1600/1000'
         ]
       },
       {
         id: "PROJECT_02",
-        text: "SPAZIO GEOLOGICO CORRETTO // Infiltrazione di frequenze scure su surfaces architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Tracce visive estrapolate da ambienti sotterranei privi di ossigeno.",
+        text: "SPAZIO GEOLOGICO CORRETTO // Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Tracce visive estrapolate da ambienti sotterranei privi di ossigeno.",
         images: [
-          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
-          'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600'
+          'https://picsum.photos/id/1050/1600/1000',
+          'https://picsum.photos/id/1060/1600/1000'
         ]
       }
     ];
@@ -186,15 +187,45 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // CARICAMENTO FOTO REALE SULLE FACCE DELL'ICOSAEDRO
-    const loader = new THREE.TextureLoader();
-    loader.setCrossOrigin('anonymous');
-    const photoTexture = loader.load('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000');
+    // MAPPATURA FOTOGRAFICA GARANTITA TRAMITE CANVAS NATIVO (NO BLOCCHI CORS)
+    function generatePhotographicTexture() {
+      const c = document.createElement('canvas');
+      c.width = 1024;
+      c.height = 1024;
+      const ctx = c.getContext('2d');
 
+      // Foto astratta 1: Architettura monolitica
+      ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(50, 50); ctx.lineTo(450, 50); ctx.lineTo(256, 450); ctx.fill();
+      ctx.fillStyle = '#1a1a1a'; ctx.fillRect(150, 100, 200, 300);
+
+      // Foto astratta 2: Contrasto minerale
+      ctx.fillStyle = '#151515'; ctx.fillRect(512, 0, 512, 512);
+      ctx.fillStyle = '#888888'; ctx.beginPath(); ctx.arc(768, 256, 180, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#000000'; ctx.fillRect(512, 256, 512, 256);
+
+      // Foto astratta 3: Linee di struttura
+      ctx.fillStyle = '#050505'; ctx.fillRect(0, 512, 512, 512);
+      ctx.fillStyle = '#cccccc';
+      for(let i=0; i<10; i++) {
+        ctx.fillRect(50 + (i*40), 550, 20, 400);
+      }
+
+      // Foto astratta 4: Tessitura scura
+      ctx.fillStyle = '#222222'; ctx.fillRect(512, 512, 512, 512);
+      ctx.fillStyle = '#ffffff';
+      for(let i=0; i<30; i++) {
+        ctx.fillRect(550 + Math.random()*400, 550 + Math.random()*400, 30, 30);
+      }
+
+      return new THREE.CanvasTexture(c);
+    }
+
+    const texture = generatePhotographicTexture();
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
     const material = new THREE.MeshBasicMaterial({
-      map: photoTexture,
+      map: texture,
       wireframe: false
     });
 
@@ -238,7 +269,7 @@
       }
     });
 
-    // CLICK MORPHING
+    // CLICK PER MORPHING FULL SCREEN
     window.addEventListener('click', (e) => {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -281,7 +312,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // OPEN / CLOSE STAGE
+    // APERTURA E CHIUSURA MODALE
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
