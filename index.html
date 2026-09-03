@@ -36,6 +36,9 @@
       z-index: 10;
       cursor: grab;
       transition: opacity 0.8s ease, filter 0.8s ease;
+      /* SFUMATURA SUI BORDI ESTERNI DEL CANVAS 3D */
+      mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
+      -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
     }
 
     #webgl-canvas:active {
@@ -44,7 +47,7 @@
 
     #webgl-canvas.hidden {
       opacity: 0;
-      filter: blur(20px) contrast(300%);
+      filter: blur(25px) contrast(300%);
       pointer-events: none;
     }
 
@@ -89,44 +92,44 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: brightness(0.7) contrast(125%) grayscale(40%);
+      filter: brightness(0.68) contrast(130%) grayscale(50%);
     }
 
-    /* COLONNA TESTO PIÙ STRETTA E FONT PIÙ PICCOLO */
+    /* COLONNA ANCORA PIÙ STRETTA, FONT MINUSCOLO, SPOSTATA A SINISTRA */
     .text-scroll-layer {
       position: absolute;
       top: 0;
-      right: 4vw;
-      width: 280px;
+      right: 12vw;
+      width: 210px;
       height: 100vh;
       overflow-y: auto;
       scrollbar-width: none;
       z-index: 2;
-      padding: 25vh 0;
+      padding: 30vh 0;
       pointer-events: auto;
     }
 
     .text-scroll-layer::-webkit-scrollbar { display: none; }
 
     .red-text-content {
-      color: #c40000;
-      font-size: 0.72rem;
+      color: #b80000;
+      font-size: 0.65rem;
       font-weight: 400;
-      line-height: 1.9;
-      letter-spacing: 1.5px;
+      line-height: 1.85;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
       text-align: justify;
       background: transparent;
-      text-shadow: 0 0 10px rgba(196, 0, 0, 0.3);
+      text-shadow: 0 0 8px rgba(184, 0, 0, 0.4);
     }
 
     .close-btn {
       position: fixed;
       top: 2.5rem;
       left: 3rem;
-      color: #666;
+      color: #555;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       letter-spacing: 4px;
       cursor: pointer;
       z-index: 100;
@@ -137,7 +140,7 @@
     }
 
     .close-btn:hover {
-      color: #c40000;
+      color: #b80000;
     }
   </style>
 </head>
@@ -156,22 +159,39 @@
   </div>
 
   <script>
+    // ARCHIVIO PROGETTI DIFFERENZIATI PER OGNI FACCIA
     const projects = [
       {
-        text: "Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Registro di decomposizione estetica. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia.",
+        id: "PROJECT_01",
+        text: "Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Registro di decomposizione estetica. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei.",
         images: [
           'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
           'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600',
-          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600',
-          'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600'
+          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600'
         ]
       },
       {
-        text: "Spazio geologico corretto. Infiltrazione di frequenze scure su surfaces architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva.",
+        id: "PROJECT_02",
+        text: "Spazio geologico corretto. Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile.",
         images: [
           'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
-          'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600',
+          'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600'
+        ]
+      },
+      {
+        id: "PROJECT_03",
+        text: "Rumore chimico e tossico su pellicola arida. Esperimento di saturazione viscerale. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura. L'oscurità come presenza densa e non riflettente.",
+        images: [
+          'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600',
           'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600'
+        ]
+      },
+      {
+        id: "PROJECT_04",
+        text: "Anatomia della polvere e dell'ombra. Sequenza rituale di ombre statiche proiettate su pareti di cemento grezzo. L'interfaccia reagisce alla pressione dello sguardo.",
+        images: [
+          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600',
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600'
         ]
       }
     ];
@@ -187,37 +207,72 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+    // CREAZIONE DYNAMIC ATLAS TEXTURE PER DIVERSE FOTO SULLE FACCE CON GLITCH
+    const atlasCanvas = document.createElement('canvas');
+    atlasCanvas.width = 1024;
+    atlasCanvas.height = 1024;
+    const ctx = atlasCanvas.getContext('2d');
+
+    const sampleImages = [
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=400',
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=400',
+      'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=400',
+      'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=400'
+    ];
+
+    let loadedCount = 0;
+    const texture = new THREE.CanvasTexture(atlasCanvas);
+
+    sampleImages.forEach((src, idx) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = src;
+      img.onload = () => {
+        const x = (idx % 2) * 512;
+        const y = Math.floor(idx / 2) * 512;
+        ctx.drawImage(img, x, y, 512, 512);
+        
+        // APPLICAZIONE RUMORE / GLITCH GRAFICO
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        for (let i = 0; i < 30; i++) {
+          ctx.fillRect(x + Math.random() * 512, y + Math.random() * 512, Math.random() * 80, 2);
+        }
+
+        loadedCount++;
+        if (loadedCount === sampleImages.length) {
+          texture.needsUpdate = true;
+        }
+      };
+    });
+
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
-    // TEXTURE FOTOGRAFICA APPLICATA ALL'ICOSAEDRO
-    const textureLoader = new THREE.TextureLoader();
-    const photoTexture = textureLoader.load('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000');
-
+    // MATERIALE ROUGHNESS BASSA + GLITCH SFUMATO
     const material = new THREE.MeshStandardMaterial({
-      map: photoTexture,
-      metalness: 0.8,
-      roughness: 0.15,
+      map: texture,
+      metalness: 0.85,
+      roughness: 0.1,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.88,
       flatShading: true
     });
 
     const icosahedron = new THREE.Mesh(geometry, material);
     scene.add(icosahedron);
 
-    // LUCI PER RIFLESSI ROUGHNESS
-    const light1 = new THREE.DirectionalLight(0xffffff, 2.8);
+    // LUCI
+    const light1 = new THREE.DirectionalLight(0xffffff, 2.5);
     light1.position.set(5, 5, 5);
     scene.add(light1);
 
-    const light2 = new THREE.DirectionalLight(0x555555, 1.5);
+    const light2 = new THREE.DirectionalLight(0x444444, 1.2);
     light2.position.set(-5, -5, -2);
     scene.add(light2);
 
-    const ambientLight = new THREE.AmbientLight(0x111111);
+    const ambientLight = new THREE.AmbientLight(0x0a0a0a);
     scene.add(ambientLight);
 
-    // INTERAZIONE DRAG
+    // INTERAZIONE MOUSE DRAG
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
 
@@ -241,7 +296,7 @@
 
     window.addEventListener('mouseup', () => { isDragging = false; });
 
-    // INTERAZIONE CLICK
+    // SELEZIONE DIVERSA A SECONDA DELLA FACCIA CLICCATA
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -253,17 +308,27 @@
       const intersects = raycaster.intersectObject(icosahedron);
 
       if (intersects.length > 0) {
-        const randomProjectIndex = Math.floor(Math.random() * projects.length);
-        openProject(randomProjectIndex);
+        // Mappa l'indice del triangolo/faccia cliccata su uno specifico progetto
+        const faceIndex = intersects[0].faceIndex;
+        const projectIndex = faceIndex % projects.length;
+        openProject(projectIndex);
       }
     });
 
+    // EFFECT GLITCH ANIMATO SULLA ROTAZIONE
     function animate() {
       requestAnimationFrame(animate);
 
       if (!isDragging) {
-        icosahedron.rotation.x += 0.002;
-        icosahedron.rotation.y += 0.004;
+        icosahedron.rotation.x += 0.0025;
+        icosahedron.rotation.y += 0.0045;
+      }
+
+      // Micro-glitch impercettibile sulle coordinate dell'oggetto
+      if (Math.random() < 0.03) {
+        icosahedron.position.x = (Math.random() - 0.5) * 0.02;
+      } else {
+        icosahedron.position.x = 0;
       }
 
       renderer.render(scene, camera);
@@ -276,6 +341,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
+    // LOGICA APERTURA / CHIUSURA
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
