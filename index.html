@@ -5,12 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VVXXII</title>
   
-  <!-- Font Sans-Serif Elegante, Geometrico e Ricercato -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
 
-  <!-- Libreria WebGL per Materiali Riflettenti e Icosaedro 3D -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <style>
@@ -29,7 +27,6 @@
       overflow: hidden;
     }
 
-    /* TELA THREE.JS PER ICOSAEDRO 3D */
     #webgl-canvas {
       position: absolute;
       top: 0;
@@ -51,7 +48,6 @@
       pointer-events: none;
     }
 
-    /* VISTA PROGETTO APERTO */
     .project-stage {
       position: absolute;
       top: 0;
@@ -70,7 +66,6 @@
       pointer-events: auto;
     }
 
-    /* LIVELLO SCROLL IMMAGINI (A TUTTO SCHERMO IN SOTTOFONDO) */
     .image-scroll-layer {
       position: absolute;
       top: 0;
@@ -97,12 +92,12 @@
       filter: brightness(0.7) contrast(125%) grayscale(40%);
     }
 
-    /* LIVELLO SCROLL TESTO (COLONNA VERTICALE A DESTRA) */
+    /* COLONNA TESTO PIÙ STRETTA E FONT PIÙ PICCOLO */
     .text-scroll-layer {
       position: absolute;
       top: 0;
-      right: 5vw;
-      width: 380px;
+      right: 4vw;
+      width: 280px;
       height: 100vh;
       overflow-y: auto;
       scrollbar-width: none;
@@ -115,24 +110,23 @@
 
     .red-text-content {
       color: #c40000;
-      font-size: 0.85rem;
+      font-size: 0.72rem;
       font-weight: 400;
-      line-height: 2.1;
-      letter-spacing: 2px;
+      line-height: 1.9;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
       text-align: justify;
       background: transparent;
-      text-shadow: 0 0 12px rgba(196, 0, 0, 0.35);
+      text-shadow: 0 0 10px rgba(196, 0, 0, 0.3);
     }
 
-    /* PULSANTE RETRATTICO / CHIUSURA */
     .close-btn {
       position: fixed;
       top: 2.5rem;
       left: 3rem;
       color: #666;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       letter-spacing: 4px;
       cursor: pointer;
       z-index: 100;
@@ -149,24 +143,19 @@
 </head>
 <body>
 
-  <!-- CANVAS 3D ICOSAEDRO -->
   <canvas id="webgl-canvas"></canvas>
 
-  <!-- STAGE PROGETTO -->
   <div class="project-stage" id="projectStage">
     <button class="close-btn" onclick="closeProject()">[ REGRESS ]</button>
 
-    <!-- LIVELLO IMMAGINI (SOTTO) -->
     <div class="image-scroll-layer" id="imageLayer"></div>
 
-    <!-- LIVELLO TESTO ROSSO (COLONNA A DESTRA) -->
     <div class="text-scroll-layer" id="textLayer">
       <div class="red-text-content" id="redText"></div>
     </div>
   </div>
 
   <script>
-    // ARCHIVIO PROGETTI CON TESTI LUNGHI PER TESTARE LO SCROLL
     const projects = [
       {
         text: "Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Registro di decomposizione estetica. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia.",
@@ -178,7 +167,7 @@
         ]
       },
       {
-        text: "Spazio geologico corretto. Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva.",
+        text: "Spazio geologico corretto. Infiltrazione di frequenze scure su surfaces architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva.",
         images: [
           'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
           'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600',
@@ -187,56 +176,50 @@
       }
     ];
 
-    // --- SETUP THREE.JS (ICOSAEDRO METALLICO & RIFLETTENTE) ---
+    // SETUP THREE.JS
     const canvas = document.getElementById('webgl-canvas');
     const scene = new THREE.Scene();
     
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 6;
+    camera.position.z = 5.5;
 
     const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // GEOMETRIA ICOSAEDRO (20 Facce)
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
-    // MATERIALE RIFLETTENTE (Bassa Roughness / Alta Metallicità / Lucido)
+    // TEXTURE FOTOGRAFICA APPLICATA ALL'ICOSAEDRO
+    const textureLoader = new THREE.TextureLoader();
+    const photoTexture = textureLoader.load('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000');
+
     const material = new THREE.MeshStandardMaterial({
-      color: 0x111111,
-      metalness: 0.95,
-      roughness: 0.08, // Estremamente lucido e riflettente
+      map: photoTexture,
+      metalness: 0.8,
+      roughness: 0.15,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       flatShading: true
     });
 
     const icosahedron = new THREE.Mesh(geometry, material);
     scene.add(icosahedron);
 
-    // BORDER FRAME (Bordi sottili bianchi/luminosi)
-    const wireframeGeo = new THREE.WireframeGeometry(geometry);
-    const wireframeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
-    const wireframe = new THREE.LineSegments(wireframeGeo, wireframeMat);
-    icosahedron.add(wireframe);
-
-    // LUCI (Luce d'impatto ad alto contrasto)
-    const light1 = new THREE.DirectionalLight(0xffffff, 2.5);
+    // LUCI PER RIFLESSI ROUGHNESS
+    const light1 = new THREE.DirectionalLight(0xffffff, 2.8);
     light1.position.set(5, 5, 5);
     scene.add(light1);
 
-    const light2 = new THREE.DirectionalLight(0x444444, 1.5);
+    const light2 = new THREE.DirectionalLight(0x555555, 1.5);
     light2.position.set(-5, -5, -2);
     scene.add(light2);
 
-    const ambientLight = new THREE.AmbientLight(0x050505);
+    const ambientLight = new THREE.AmbientLight(0x111111);
     scene.add(ambientLight);
 
-    // CONTROLLO ROTAZIONE DRAG MOUSE & INTERAZIONE
+    // INTERAZIONE DRAG
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
-    let autoRotateSpeedX = 0.003;
-    let autoRotateSpeedY = 0.005;
 
     window.addEventListener('mousedown', (e) => {
       isDragging = true;
@@ -258,28 +241,7 @@
 
     window.addEventListener('mouseup', () => { isDragging = false; });
 
-    // TOUCH SUPPORT
-    window.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    });
-
-    window.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      const deltaMove = {
-        x: e.touches[0].clientX - previousMousePosition.x,
-        y: e.touches[0].clientY - previousMousePosition.y
-      };
-
-      icosahedron.rotation.y += deltaMove.x * 0.008;
-      icosahedron.rotation.x += deltaMove.y * 0.008;
-
-      previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    });
-
-    window.addEventListener('touchend', () => { isDragging = false; });
-
-    // CLICK SULL'ICOSAEDRO PER APRIRE PROGETTO
+    // INTERAZIONE CLICK
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -291,33 +253,29 @@
       const intersects = raycaster.intersectObject(icosahedron);
 
       if (intersects.length > 0) {
-        // Sceglie casualmente o sequenzialmente un progetto dall'archivio
         const randomProjectIndex = Math.floor(Math.random() * projects.length);
         openProject(randomProjectIndex);
       }
     });
 
-    // LOOP DI RENDERING ANIMAZIONE
     function animate() {
       requestAnimationFrame(animate);
 
       if (!isDragging) {
-        icosahedron.rotation.x += autoRotateSpeedX;
-        icosahedron.rotation.y += autoRotateSpeedY;
+        icosahedron.rotation.x += 0.002;
+        icosahedron.rotation.y += 0.004;
       }
 
       renderer.render(scene, camera);
     }
     animate();
 
-    // RESIZE RESPONSIVO
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- LOGICA APERTURA / CHIUSURA PROGETTI ---
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
