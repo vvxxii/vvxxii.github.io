@@ -117,24 +117,25 @@
       text-shadow: 0 0 6px rgba(184, 0, 0, 0.35);
     }
 
+    /* PULSANTE X PER CHIUSURA */
     .close-btn {
       position: fixed;
       top: 2.5rem;
       left: 3rem;
-      color: #555;
+      color: #777;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.6rem;
-      letter-spacing: 4px;
+      font-size: 1.2rem;
+      line-height: 1;
       cursor: pointer;
       z-index: 100;
       background: transparent;
       border: none;
-      text-transform: uppercase;
-      transition: color 0.3s ease;
+      transition: color 0.3s ease, transform 0.3s ease;
     }
 
     .close-btn:hover {
       color: #b80000;
+      transform: scale(1.2);
     }
   </style>
 </head>
@@ -143,7 +144,7 @@
   <canvas id="webgl-canvas"></canvas>
 
   <div class="project-stage" id="projectStage">
-    <button class="close-btn" onclick="closeProject()">[ REGRESS ]</button>
+    <button class="close-btn" onclick="closeProject()">✕</button>
 
     <div class="image-scroll-layer" id="imageLayer"></div>
 
@@ -156,7 +157,7 @@
     const projects = [
       {
         id: "PROJECT_01",
-        text: "REGISTRO DI DECOMPOSIZIONE ESTETICA // Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia. Ossidazione visiva e rumore termico registrati lungo i bordi della struttura monolitica. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva. Strati geologici sovrapposti in sequenza asimmetrica. Nessun segnale di ritorno dalla superficie inferiore. Contrazione della massa e alterazione della prospettiva visiva. ANALISI STRUTTURALE // Il frammento fotografico agisce come documento primario di un evento non documentato. Rilievi ad altissimo contrasto per isolare la forma dalla sua funzione originaria. Silenzio operativo prolungato nelle sezioni inferiori del monolite. Interfeze ottiche sovrapposte lungo l'asse di propagazione visiva. Nessun margine di tolleranza visiva.",
+        text: "REGISTRO DI DECOMPOSIZIONE ESTETICA // Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia. Ossidazione visiva e rumore termico registrati lungo i bordi della struttura monolitica. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva. Strati geologici sovrapposti in sequenza asimmetrica. Nessun segnale di ritorno dalla superficie inferiore. Contrazione della massa e alterazione della prospettiva visiva. ANALISI STRUTTURALE // Il frammento fotografico agisce come documento primario di un evento non documentato. Rilievi ad altissimo contrasto per isolare la forma dalla sua funzione originaria. Silenzio operativo prolungato nelle sezioni inferiori del monolite. Interfeze ottiche sovrapposte lungo l'asse di propagazione visiva.",
         images: [
           'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
           'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600',
@@ -166,7 +167,7 @@
       },
       {
         id: "PROJECT_02",
-        text: "SPAZIO GEOLOGICO CORRETTO // Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Tracce visive estrapolate da ambienti sotterranei privi di ossigeno.",
+        text: "SPAZIO GEOLOGICO CORRETTO // Infiltrazione di frequenze scure su surfaces architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Tracce visive estrapolate da ambienti sotterranei privi di ossigeno.",
         images: [
           'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
           'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600'
@@ -185,41 +186,11 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // GENERAZIONE MAPPA FOTOGRAFICA GARANTITA (NO CORS)
-    function createPhotoAtlasTexture() {
-      const texCanvas = document.createElement('canvas');
-      texCanvas.width = 1024;
-      texCanvas.height = 1024;
-      const ctx = texCanvas.getContext('2d');
+    // CARICAMENTO FOTO REALE SULLE FACCE DELL'ICOSAEDRO
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
+    const photoTexture = loader.load('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000');
 
-      // Quadrante 1: Struttura architettonica
-      ctx.fillStyle = '#0f0f0f'; ctx.fillRect(0, 0, 512, 512);
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(100, 50, 300, 400);
-      ctx.fillStyle = '#111111'; ctx.beginPath(); ctx.moveTo(100, 50); ctx.lineTo(400, 450); ctx.lineTo(100, 450); ctx.fill();
-
-      // Quadrante 2: Paesaggio scuro
-      ctx.fillStyle = '#1a1a1a'; ctx.fillRect(512, 0, 512, 512);
-      ctx.fillStyle = '#666666'; ctx.beginPath(); ctx.arc(768, 256, 180, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#000000'; ctx.fillRect(512, 256, 512, 256);
-
-      // Quadrante 3: Anatomia astratta
-      ctx.fillStyle = '#050505'; ctx.fillRect(0, 512, 512, 512);
-      ctx.fillStyle = '#888888'; ctx.fillRect(80, 600, 350, 80); ctx.fillRect(180, 720, 150, 200);
-
-      // Quadrante 4: Texture minerale
-      ctx.fillStyle = '#222222'; ctx.fillRect(512, 512, 512, 512);
-      ctx.fillStyle = '#aaaaaa';
-      for(let i=0; i<40; i++) {
-        ctx.fillRect(512 + Math.random()*450, 512 + Math.random()*450, Math.random()*60, Math.random()*60);
-      }
-
-      const texture = new THREE.CanvasTexture(texCanvas);
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      return texture;
-    }
-
-    const photoTexture = createPhotoAtlasTexture();
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
     const material = new THREE.MeshBasicMaterial({
@@ -230,7 +201,7 @@
     const icosahedron = new THREE.Mesh(geometry, material);
     scene.add(icosahedron);
 
-    // SISTEMA DI ROTAZIONE CON HOVER ED INERZIA
+    // SISTEMA DI ROTAZIONE HOVER + INERZIA
     let isHovered = false;
     let velocityX = 0;
     let velocityY = 0;
@@ -244,7 +215,6 @@
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-      // Verifica se il mouse è esattamente sopra l'icosaedro
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObject(icosahedron);
 
@@ -254,7 +224,6 @@
           previousMouseX = e.clientX;
           previousMouseY = e.clientY;
         } else {
-          // Calcola l'impulso dato dal movimento del mouse
           const deltaX = e.clientX - previousMouseX;
           const deltaY = e.clientY - previousMouseY;
 
@@ -269,7 +238,7 @@
       }
     });
 
-    // CLICK PER MORPHING FULL-SCREEN
+    // CLICK MORPHING
     window.addEventListener('click', (e) => {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -288,20 +257,17 @@
       }
     });
 
-    // LOOP ANIMAZIONE
     function animate() {
       requestAnimationFrame(animate);
 
       if (isHovered) {
-        // Applica rotazione spinta dal mouse
         icosahedron.rotation.y += velocityY;
         icosahedron.rotation.x += velocityX;
       } else {
-        // Quando il mouse è fuori, rallenta l'impulso per inerzia e riprende la rotazione autonoma
         velocityY *= 0.95;
         velocityX *= 0.95;
 
-        icosahedron.rotation.y += velocityY + 0.004; // Rotazione automatica di fondo
+        icosahedron.rotation.y += velocityY + 0.004;
         icosahedron.rotation.x += velocityX + 0.002;
       }
 
@@ -315,7 +281,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // APERTURA / CHIUSURA STAGE
+    // OPEN / CLOSE STAGE
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
