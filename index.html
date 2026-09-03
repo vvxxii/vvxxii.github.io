@@ -40,7 +40,6 @@
       pointer-events: none;
     }
 
-    /* vignettatura globale + atmosfera dungeon */
     #vignette {
       position: fixed; inset: 0;
       z-index: 20;
@@ -49,7 +48,6 @@
       mix-blend-mode: multiply;
     }
 
-    /* grana pellicola / rumore che flickera */
     #grain {
       position: fixed; inset: 0;
       z-index: 21;
@@ -62,24 +60,6 @@
       0% { transform: translate(0,0); }
       50% { transform: translate(-2%,1%); }
       100% { transform: translate(1%,-2%); }
-    }
-
-    /* pulviscolo / titolo fioco */
-    #sigil {
-      position: fixed;
-      bottom: 2.5rem; left: 3rem;
-      z-index: 22;
-      font-size: 0.65rem;
-      letter-spacing: 3px;
-      color: #4a1010;
-      text-transform: uppercase;
-      opacity: 0.8;
-      animation: flicker 6s infinite;
-      pointer-events: none;
-    }
-    @keyframes flicker {
-      0%, 91%, 93%, 96%, 100% { opacity: 0.75; }
-      92%, 95% { opacity: 0.15; }
     }
 
     .project-stage {
@@ -160,7 +140,6 @@
   <canvas id="webgl-canvas"></canvas>
   <div id="vignette"></div>
   <div id="grain"></div>
-  <div id="sigil">VVXXII — non risvegliare ciò che dorme</div>
 
   <div class="project-stage" id="projectStage">
     <button class="close-btn" onclick="closeProject()">✕</button>
@@ -192,7 +171,6 @@
       }
     ];
 
-    // pool di immagini reali da distribuire sulle 20 facce dell'icosaedro
     const facePool = [
       'https://picsum.photos/id/1025/700/700','https://picsum.photos/id/1040/700/700',
       'https://picsum.photos/id/1062/700/700','https://picsum.photos/id/1069/700/700',
@@ -206,7 +184,6 @@
       'https://picsum.photos/id/237/700/700','https://picsum.photos/id/244/700/700'
     ];
 
-    // THREE.JS SETUP
     const canvas = document.getElementById('webgl-canvas');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x000000, 0.16);
@@ -218,7 +195,6 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // luce fioca da "torcia" che pulsa, tipico horror-dungeon
     const ambient = new THREE.AmbientLight(0x220a0a, 0.55);
     scene.add(ambient);
 
@@ -230,8 +206,6 @@
     rim.position.set(-3, -2, -2);
     scene.add(rim);
 
-    // costruisce una texture da una FOTO REALE, con vignettatura (bordi -> trasparenti,
-    // per fondere lo spigolo col nero) + leggero glitch/aberrazione cromatica
     function buildFaceTexture(url, seed) {
       return new Promise((resolve) => {
         const size = 512;
@@ -242,43 +216,35 @@
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
-          // cover-fit
-          const scale = Math.max(size / img.width, size / img.height);
-          const w = img.width * scale, h = img.height * scale;
-          const x = (size - w) / 2, y = (size - h) / 2;
+          // Riduzione proporzionale dell'immagine disegnata dentro la faccia
+          const drawSize = size * 0.65;
+          const offset = (size - drawSize) / 2;
 
-          // strato base desaturato/scurito
           ctx.filter = 'grayscale(55%) contrast(130%) brightness(0.55)';
-          ctx.drawImage(img, x, y, w, h);
+          ctx.drawImage(img, offset, offset, drawSize, drawSize);
           ctx.filter = 'none';
 
-          // aberrazione cromatica leggera (glitch): canale rosso e ciano sfalsati
           ctx.globalCompositeOperation = 'screen';
           ctx.globalAlpha = 0.18;
-          ctx.drawImage(img, x - 4, y, w, h); // shift rosso
+          ctx.drawImage(img, offset - 3, offset, drawSize, drawSize);
           ctx.globalAlpha = 0.12;
-          ctx.drawImage(img, x + 4, y, w, h); // shift ciano
+          ctx.drawImage(img, offset + 3, offset, drawSize, drawSize);
           ctx.globalAlpha = 1;
           ctx.globalCompositeOperation = 'source-over';
 
-          // scanline sottili
           ctx.globalAlpha = 0.06;
           ctx.fillStyle = '#000';
           for (let i = 0; i < size; i += 3) ctx.fillRect(0, i, size, 1);
           ctx.globalAlpha = 1;
 
-          // tinta rossastra da "sangue/fuoco lontano"
           ctx.globalCompositeOperation = 'multiply';
           ctx.fillStyle = 'rgba(90,15,15,0.35)';
           ctx.fillRect(0, 0, size, size);
           ctx.globalCompositeOperation = 'source-over';
 
-          // VIGNETTATURA -> alfa: il centro resta visibile, i bordi diventano trasparenti.
-          // Fondendosi col nero di sfondo, lo spigolo triangolare "scompare": effetto eterei,
-          // spigoli morbidi anziché taglienti.
-          const grad = ctx.createRadialGradient(size/2, size/2, size*0.05, size/2, size/2, size*0.62);
+          const grad = ctx.createRadialGradient(size/2, size/2, size*0.05, size/2, size/2, size*0.55);
           grad.addColorStop(0, 'rgba(255,255,255,1)');
-          grad.addColorStop(0.65, 'rgba(255,255,255,0.85)');
+          grad.addColorStop(0.6, 'rgba(255,255,255,0.85)');
           grad.addColorStop(1, 'rgba(255,255,255,0)');
           ctx.globalCompositeOperation = 'destination-in';
           ctx.fillStyle = grad;
@@ -288,11 +254,13 @@
           const tex = new THREE.CanvasTexture(c);
           tex.wrapS = THREE.RepeatWrapping;
           tex.wrapT = THREE.RepeatWrapping;
+          // Riduzione aggiuntiva della texture e centratura
+          tex.repeat.set(1.8, 1.8);
+          tex.offset.set(-0.4, -0.4);
           tex.needsUpdate = true;
           resolve(tex);
         };
         img.onerror = () => {
-          // fallback: rettangolo scuro se l'immagine non carica
           ctx.fillStyle = '#0a0a0a';
           ctx.fillRect(0, 0, size, size);
           resolve(new THREE.CanvasTexture(c));
@@ -302,7 +270,7 @@
     }
 
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
-    const faceCount = geometry.attributes.position.count / 3; // 20 facce, geometria non indicizzata
+    const faceCount = geometry.attributes.position.count / 3;
 
     geometry.clearGroups();
     const materials = [];
@@ -329,7 +297,7 @@
     const icosahedron = new THREE.Mesh(geometry, materials);
     scene.add(icosahedron);
 
-    // ROTAZIONE HOVER CON INERZIA
+    // ROTAZIONE HOVER - MOVIMENTI MINIMI E RAPIDI
     let isHovered = false;
     let velocityX = 0, velocityY = 0;
     let previousMouseX = 0, previousMouseY = 0;
@@ -352,8 +320,9 @@
         } else {
           const deltaX = e.clientX - previousMouseX;
           const deltaY = e.clientY - previousMouseY;
-          velocityY = deltaX * 0.004;
-          velocityX = deltaY * 0.004;
+          // Impulso più marcato ma reattivo
+          velocityY = deltaX * 0.009;
+          velocityX = deltaY * 0.009;
           previousMouseX = e.clientX;
           previousMouseY = e.clientY;
         }
@@ -378,18 +347,16 @@
       }
     });
 
-    // GLITCH periodico: sfarfallio casuale di alcune facce (opacità/emissive/offset UV)
     let glitchClock = 0;
     function applyGlitch(dt) {
       glitchClock += dt;
       if (glitchClock < 0.12) return;
       glitchClock = 0;
 
-      // reset leggero + jitter su un piccolo sottoinsieme di facce
       materials.forEach((mat) => {
         mat.opacity = 0.9;
         mat.emissiveIntensity = 0.4;
-        if (mat.map) { mat.map.offset.set(0, 0); }
+        if (mat.map) { mat.map.offset.set(-0.4, -0.4); }
       });
 
       const glitchCount = 1 + Math.floor(Math.random() * 2);
@@ -399,7 +366,7 @@
         mat.opacity = 0.35 + Math.random() * 0.4;
         mat.emissiveIntensity = 0.8 + Math.random() * 1.4;
         if (mat.map) {
-          mat.map.offset.set((Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * 0.08);
+          mat.map.offset.set(-0.4 + (Math.random() - 0.5) * 0.06, -0.4 + (Math.random() - 0.5) * 0.06);
         }
       }
     }
@@ -414,13 +381,13 @@
         icosahedron.rotation.y += velocityY;
         icosahedron.rotation.x += velocityX;
       } else {
-        velocityY *= 0.95;
-        velocityX *= 0.95;
-        icosahedron.rotation.y += velocityY + 0.004;
-        icosahedron.rotation.x += velocityX + 0.002;
+        // Inerzia più rapida a smorzarsi (0.88) per fermare il movimento subito
+        velocityY *= 0.88;
+        velocityX *= 0.88;
+        icosahedron.rotation.y += velocityY + 0.005;
+        icosahedron.rotation.x += velocityX + 0.003;
       }
 
-      // torcia che pulsa/tremola, come una fiamma in un dungeon
       torch.intensity = 1.9 + Math.sin(t * 6.0) * 0.35 + Math.sin(t * 17.0) * 0.15 + (Math.random() - 0.5) * 0.2;
       torch.position.x = 2 + Math.sin(t * 0.6) * 0.4;
       torch.position.y = 1.5 + Math.cos(t * 0.5) * 0.3;
@@ -437,7 +404,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // APERTURA / CHIUSURA STAGE
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
