@@ -11,222 +11,296 @@
       padding: 0;
     }
 
-    html, body {
-      width: 100%;
-      height: 100%;
+    body {
       background-color: #000;
       color: #888;
       font-family: 'Courier New', Courier, monospace;
+      height: 100vh;
+      width: 100vw;
       overflow: hidden;
     }
 
-    /* FLUSSO PRINCIPALE (A SINISTRA) */
-    .main-feed {
+    /* VIEWPORT POLIEDRO 3D */
+    .polyhedron-stage {
       position: absolute;
       top: 0;
       left: 0;
-      width: calc(100vw - 80px);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px;
+      z-index: 10;
+      transition: opacity 0.8s ease, filter 0.8s ease;
+    }
+
+    .polyhedron-stage.hidden {
+      opacity: 0;
+      filter: blur(20px) contrast(300%);
+      pointer-events: none;
+    }
+
+    .polyhedron {
+      width: 260px;
+      height: 260px;
+      position: relative;
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .face {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      background: #050505;
+      border: 1px solid #222;
+      overflow: hidden;
+      opacity: 0.85;
+      transition: border-color 0.3s, opacity 0.3s;
+      backface-visibility: visible;
+    }
+
+    .face:hover {
+      border-color: #888;
+      opacity: 1;
+    }
+
+    .face img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(100%) contrast(140%) brightness(0.7);
+      pointer-events: none;
+    }
+
+    /* VISTA PROGETTO APERTO */
+    .project-stage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      z-index: 1;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    .project-stage.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* SCROLL IMMAGINI (SOTTO) */
+    .image-scroll-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
       height: 100vh;
       overflow-y: auto;
-      scroll-behavior: smooth;
       scrollbar-width: none;
       z-index: 1;
     }
 
-    .main-feed::-webkit-scrollbar {
-      display: none;
-    }
+    .image-scroll-layer::-webkit-scrollbar { display: none; }
 
-    /* Ogni elemento nel main occupa l'intero schermo */
-    .media-screen {
-      width: 100%;
+    .image-block {
+      width: 100vw;
       height: 100vh;
       position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
     }
 
-    .media-screen img {
+    .image-block img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
-      filter: brightness(0.85) contrast(110%);
+      filter: brightness(0.75) contrast(120%);
     }
 
-    /* Blocchi di testo trattati come blocchi visuali a tutto schermo */
-    .text-screen {
-      width: 100%;
-      height: 100vh;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem;
-      flex-shrink: 0;
-    }
-
-    .text-screen p {
-      font-size: 0.85rem;
-      line-height: 1.8;
-      color: #777;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      max-width: 800px;
-      text-align: justify;
-    }
-
-    /* COLONNA A DESTRA (FOTO CONTINUE SENZA SPAZI) */
-    .sidebar {
-      position: fixed;
+    /* SCROLL TESTO (SOPRA - IN ROSSO) */
+    .text-scroll-layer {
+      position: absolute;
       top: 0;
-      right: 0;
-      width: 80px;
+      left: 8vw;
+      width: 38vw;
       height: 100vh;
-      background: #000;
-      z-index: 100;
       overflow-y: auto;
       scrollbar-width: none;
-      display: flex;
-      flex-direction: column;
+      z-index: 2;
+      padding: 35vh 0;
+      pointer-events: auto;
     }
 
-    .sidebar::-webkit-scrollbar {
-      display: none;
+    .text-scroll-layer::-webkit-scrollbar { display: none; }
+
+    .red-text-content {
+      color: #b30000;
+      font-size: 0.85rem;
+      line-height: 1.9;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(179, 0, 0, 0.4);
+      /* Nessuno sfondo */
+      background: transparent;
     }
 
-    .thumb-item {
-      width: 100%;
-      height: 100px;
-      flex-shrink: 0;
+    /* PULSANTE CHIUSURA / RETRATTICO */
+    .close-btn {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      color: #555;
+      font-size: 0.7rem;
+      letter-spacing: 3px;
       cursor: pointer;
-      overflow: hidden;
-      opacity: 0.35;
-      transition: opacity 0.3s ease, filter 0.3s ease;
+      z-index: 100;
+      background: transparent;
+      border: none;
+      text-transform: uppercase;
     }
 
-    .thumb-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      filter: grayscale(100%);
-    }
-
-    .thumb-item:hover {
-      opacity: 0.75;
-    }
-
-    .thumb-item.active {
-      opacity: 1;
-    }
-
-    .thumb-item.active img {
-      filter: grayscale(0%);
+    .close-btn:hover {
+      color: #b30000;
     }
   </style>
 </head>
 <body>
 
-  <!-- AREA PRINCIPALE (A SCHERMO INTERO) -->
-  <main class="main-feed" id="mainFeed">
-    <!-- Generato dinamicamente -->
-  </main>
+  <div class="polyhedron-stage" id="polyStage">
+    <div class="polyhedron" id="polyhedron">
+      
+      <div class="face" style="transform: rotateY(0deg) translateZ(130px);" onclick="openProject(0)">
+        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" alt="">
+      </div>
+      <div class="face" style="transform: rotateY(90deg) translateZ(130px);" onclick="openProject(1)">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000" alt="">
+      </div>
+      <div class="face" style="transform: rotateY(180deg) translateZ(130px);" onclick="openProject(2)">
+        <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000" alt="">
+      </div>
+      <div class="face" style="transform: rotateY(-90deg) translateZ(130px);" onclick="openProject(3)">
+        <img src="https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000" alt="">
+      </div>
+      <div class="face" style="transform: rotateX(90deg) translateZ(130px);" onclick="openProject(0)">
+        <img src="https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1000" alt="">
+      </div>
+      <div class="face" style="transform: rotateX(-90deg) translateZ(130px);" onclick="openProject(1)">
+        <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1000" alt="">
+      </div>
 
-  <!-- STRISCIA CONTINUA MINIATURE (A DESTRA) -->
-  <aside class="sidebar" id="sidebar">
-    <!-- Generata dinamicamente -->
-  </aside>
+    </div>
+  </div>
+
+  <div class="project-stage" id="projectStage">
+    <button class="close-btn" onclick="closeProject()">[ REGRESS ]</button>
+
+    <div class="text-scroll-layer" id="textLayer">
+      <div class="red-text-content" id="redText"></div>
+    </div>
+
+    <div class="image-scroll-layer" id="imageLayer"></div>
+  </div>
 
   <script>
+    // ARCHIVIO PROGETTI
     const projects = [
       {
-        id: 'SEC_01',
-        cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
-        content: [
-          { type: 'image', value: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600' },
-          { type: 'text', value: 'Studio viscerale della luce radente su superfici industriali scomposizioni e ombre profonde.' },
-          { type: 'image', value: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600' },
-          { type: 'text', value: 'Assenza di colore primario. Dominanza dei grigi ossidati e saturazione controllata.' },
-          { type: 'image', value: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600' }
+        text: "Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Registro di decomposizione estetica.",
+        images: [
+          'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
+          'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600',
+          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600'
         ]
       },
       {
-        id: 'SEC_02',
-        cover: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
-        content: [
-          { type: 'image', value: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600' },
-          { type: 'text', value: 'Rilievi su geometrie architettoniche deserte e superfici prive di presenza umana.' },
-          { type: 'image', value: 'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600' }
+        text: "Spazio geologico corretto. Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa.",
+        images: [
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
+          'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600'
         ]
       },
       {
-        id: 'SEC_03',
-        cover: 'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600',
-        content: [
-          { type: 'image', value: 'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600' },
-          { type: 'text', value: 'Frequenze visive ridotte all’essenziale. Strutture portanti svelate dal buio.' }
+        text: "Rumore chimico su pellicola arida. Esperimento di saturazione e desaturazione viscerale. Sequenza di fotogrammi rimasti sepolti.",
+        images: [
+          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600',
+          'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600'
         ]
       },
       {
-        id: 'SEC_04',
-        cover: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600',
-        content: [
-          { type: 'image', value: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600' },
-          { type: 'text', value: 'Grana spessa ed esposizioni estreme su pellicola chimica.' }
+        text: "Traccia residuale. Studio di un interno vuoto sotto illuminazione fredda isolata.",
+        images: [
+          'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600',
+          'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600'
         ]
       }
     ];
 
-    let activeProjectIndex = 0;
+    // ROTAZIONE CASUALE DEL POLIEDRO
+    const poly = document.getElementById('polyhedron');
+    let rotX = 0;
+    let rotY = 0;
+    let rotZ = 0;
 
-    const mainFeed = document.getElementById('mainFeed');
-    const sidebar = document.getElementById('sidebar');
+    let speedX = (Math.random() - 0.5) * 0.4;
+    let speedY = (Math.random() - 0.5) * 0.4;
+    let speedZ = (Math.random() - 0.5) * 0.2;
 
-    function initSidebar() {
-      sidebar.innerHTML = '';
-      projects.forEach((proj, idx) => {
-        const item = document.createElement('div');
-        item.className = `thumb-item ${idx === activeProjectIndex ? 'active' : ''}`;
-        item.onclick = () => selectProject(idx);
+    function animatePolyhedron() {
+      rotX += speedX;
+      rotY += speedY;
+      rotZ += speedZ;
 
-        const img = document.createElement('img');
-        img.src = proj.cover;
+      // Modifica impercettibilmente la traiettoria per creare un movimento organico/randomico
+      if (Math.random() < 0.01) {
+        speedX += (Math.random() - 0.5) * 0.05;
+        speedY += (Math.random() - 0.5) * 0.05;
+      }
 
-        item.appendChild(img);
-        sidebar.appendChild(item);
-      });
+      poly.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`;
+      requestAnimationFrame(animatePolyhedron);
     }
 
-    function selectProject(index) {
-      activeProjectIndex = index;
+    animatePolyhedron();
+
+    // APERTURA ED ESPLORAZIONE PROGETTI
+    const polyStage = document.getElementById('polyStage');
+    const projectStage = document.getElementById('projectStage');
+    const imageLayer = document.getElementById('imageLayer');
+    const redText = document.getElementById('redText');
+
+    function openProject(index) {
       const proj = projects[index];
 
-      initSidebar();
-
-      mainFeed.innerHTML = '';
-      proj.content.forEach(item => {
-        if (item.type === 'image') {
-          const screen = document.createElement('div');
-          screen.className = 'media-screen';
-          const img = document.createElement('img');
-          img.src = item.value;
-          screen.appendChild(img);
-          mainFeed.appendChild(screen);
-        } else if (item.type === 'text') {
-          const screen = document.createElement('div');
-          screen.className = 'text-screen';
-          const p = document.createElement('p');
-          p.innerText = item.value;
-          screen.appendChild(p);
-          mainFeed.appendChild(screen);
-        }
+      // Svuota e riempie lo scroll immagini
+      imageLayer.innerHTML = '';
+      proj.images.forEach(url => {
+        const block = document.createElement('div');
+        block.className = 'image-block';
+        const img = document.createElement('img');
+        img.src = url;
+        block.appendChild(img);
+        imageLayer.appendChild(block);
       });
 
-      mainFeed.scrollTop = 0;
+      // Inserisce il testo rosso
+      redText.innerText = proj.text;
+
+      // Transizione di stato
+      polyStage.classList.add('hidden');
+      setTimeout(() => {
+        projectStage.classList.add('active');
+      }, 400);
     }
 
-    selectProject(0);
+    function closeProject() {
+      projectStage.classList.remove('active');
+      setTimeout(() => {
+        polyStage.classList.remove('hidden');
+      }, 300);
+    }
   </script>
 </body>
 </html>
