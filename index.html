@@ -36,9 +36,8 @@
       z-index: 10;
       cursor: grab;
       transition: opacity 0.8s ease, filter 0.8s ease;
-      /* SFUMATURA SUI BORDI ESTERNI DEL CANVAS 3D */
-      mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
-      -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
+      mask-image: radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 80%);
+      -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 80%);
     }
 
     #webgl-canvas:active {
@@ -92,15 +91,15 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: brightness(0.68) contrast(130%) grayscale(50%);
+      filter: brightness(0.65) contrast(135%) grayscale(60%);
     }
 
-    /* COLONNA ANCORA PIÙ STRETTA, FONT MINUSCOLO, SPOSTATA A SINISTRA */
+    /* TIPOGRAFIA MICRO-COMPATTA */
     .text-scroll-layer {
       position: absolute;
       top: 0;
       right: 12vw;
-      width: 210px;
+      width: 200px;
       height: 100vh;
       overflow-y: auto;
       scrollbar-width: none;
@@ -113,14 +112,14 @@
 
     .red-text-content {
       color: #b80000;
-      font-size: 0.65rem;
+      font-size: 0.58rem; /* Font ancora più piccolo */
       font-weight: 400;
-      line-height: 1.85;
-      letter-spacing: 1.2px;
+      line-height: 1.5;   /* Interlinea ridotta */
+      letter-spacing: 1px;
       text-transform: uppercase;
       text-align: justify;
       background: transparent;
-      text-shadow: 0 0 8px rgba(184, 0, 0, 0.4);
+      text-shadow: 0 0 6px rgba(184, 0, 0, 0.35);
     }
 
     .close-btn {
@@ -129,7 +128,7 @@
       left: 3rem;
       color: #555;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       letter-spacing: 4px;
       cursor: pointer;
       z-index: 100;
@@ -159,7 +158,6 @@
   </div>
 
   <script>
-    // ARCHIVIO PROGETTI DIFFERENZIATI PER OGNI FACCIA
     const projects = [
       {
         id: "PROJECT_01",
@@ -185,14 +183,6 @@
           'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=1600',
           'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600'
         ]
-      },
-      {
-        id: "PROJECT_04",
-        text: "Anatomia della polvere e dell'ombra. Sequenza rituale di ombre statiche proiettate su pareti di cemento grezzo. L'interfaccia reagisce alla pressione dello sguardo.",
-        images: [
-          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1600',
-          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600'
-        ]
       }
     ];
 
@@ -207,51 +197,38 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // CREAZIONE DYNAMIC ATLAS TEXTURE PER DIVERSE FOTO SULLE FACCE CON GLITCH
-    const atlasCanvas = document.createElement('canvas');
-    atlasCanvas.width = 1024;
-    atlasCanvas.height = 1024;
-    const ctx = atlasCanvas.getContext('2d');
+    // GENERAZIONE PROCEDURALE TEXTURE PER FACCE ICOSAEDRO (NO PROBLEMI CORS)
+    function generateGlitchTexture() {
+      const texCanvas = document.createElement('canvas');
+      texCanvas.width = 512;
+      texCanvas.height = 512;
+      const ctx = texCanvas.getContext('2d');
 
-    const sampleImages = [
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=400',
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=400',
-      'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=400',
-      'https://images.unsplash.com/photo-1500462828032-a3a826451e51?q=80&w=400'
-    ];
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, 512, 512);
 
-    let loadedCount = 0;
-    const texture = new THREE.CanvasTexture(atlasCanvas);
+      // Sfondi sfumati e grana
+      for (let i = 0; i < 400; i++) {
+        const val = Math.floor(Math.random() * 120);
+        ctx.fillStyle = `rgb(${val},${val},${val})`;
+        ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 60, Math.random() * 4);
+      }
 
-    sampleImages.forEach((src, idx) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = src;
-      img.onload = () => {
-        const x = (idx % 2) * 512;
-        const y = Math.floor(idx / 2) * 512;
-        ctx.drawImage(img, x, y, 512, 512);
-        
-        // APPLICAZIONE RUMORE / GLITCH GRAFICO
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-        for (let i = 0; i < 30; i++) {
-          ctx.fillRect(x + Math.random() * 512, y + Math.random() * 512, Math.random() * 80, 2);
-        }
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 20; i++) {
+        ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 120, 1);
+      }
 
-        loadedCount++;
-        if (loadedCount === sampleImages.length) {
-          texture.needsUpdate = true;
-        }
-      };
-    });
+      return new THREE.CanvasTexture(texCanvas);
+    }
 
+    const texture = generateGlitchTexture();
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
-    // MATERIALE ROUGHNESS BASSA + GLITCH SFUMATO
     const material = new THREE.MeshStandardMaterial({
       map: texture,
-      metalness: 0.85,
-      roughness: 0.1,
+      metalness: 0.9,
+      roughness: 0.12,
       transparent: true,
       opacity: 0.88,
       flatShading: true
@@ -261,18 +238,18 @@
     scene.add(icosahedron);
 
     // LUCI
-    const light1 = new THREE.DirectionalLight(0xffffff, 2.5);
+    const light1 = new THREE.DirectionalLight(0xffffff, 3.0);
     light1.position.set(5, 5, 5);
     scene.add(light1);
 
-    const light2 = new THREE.DirectionalLight(0x444444, 1.2);
+    const light2 = new THREE.DirectionalLight(0x444444, 1.5);
     light2.position.set(-5, -5, -2);
     scene.add(light2);
 
     const ambientLight = new THREE.AmbientLight(0x0a0a0a);
     scene.add(ambientLight);
 
-    // INTERAZIONE MOUSE DRAG
+    // DRAG MOUSE
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
 
@@ -296,7 +273,7 @@
 
     window.addEventListener('mouseup', () => { isDragging = false; });
 
-    // SELEZIONE DIVERSA A SECONDA DELLA FACCIA CLICCATA
+    // INTERAZIONE CLICK SULLE FACCE
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -308,27 +285,18 @@
       const intersects = raycaster.intersectObject(icosahedron);
 
       if (intersects.length > 0) {
-        // Mappa l'indice del triangolo/faccia cliccata su uno specifico progetto
         const faceIndex = intersects[0].faceIndex;
         const projectIndex = faceIndex % projects.length;
         openProject(projectIndex);
       }
     });
 
-    // EFFECT GLITCH ANIMATO SULLA ROTAZIONE
     function animate() {
       requestAnimationFrame(animate);
 
       if (!isDragging) {
         icosahedron.rotation.x += 0.0025;
         icosahedron.rotation.y += 0.0045;
-      }
-
-      // Micro-glitch impercettibile sulle coordinate dell'oggetto
-      if (Math.random() < 0.03) {
-        icosahedron.position.x = (Math.random() - 0.5) * 0.02;
-      } else {
-        icosahedron.position.x = 0;
       }
 
       renderer.render(scene, camera);
@@ -341,7 +309,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // LOGICA APERTURA / CHIUSURA
+    // APERTURA E CHIUSURA PROGETTI
     const projectStage = document.getElementById('projectStage');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
