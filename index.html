@@ -27,6 +27,7 @@
       overflow: hidden;
     }
 
+    /* CANVAS 3D CON MORPHING SCALE */
     #webgl-canvas {
       position: absolute;
       top: 0;
@@ -34,19 +35,17 @@
       width: 100vw;
       height: 100vh;
       z-index: 10;
-      cursor: grab;
-      transition: opacity 0.8s ease, filter 0.8s ease;
-      mask-image: radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 80%);
-      -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 80%);
+      cursor: crosshair;
+      transition: transform 0.9s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.8s ease, filter 0.8s ease;
+      mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
+      -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
     }
 
-    #webgl-canvas:active {
-      cursor: grabbing;
-    }
-
-    #webgl-canvas.hidden {
+    /* EFFETTO MORPHING EXPAND */
+    #webgl-canvas.morphing {
+      transform: scale(4.5);
+      filter: blur(15px) contrast(200%);
       opacity: 0;
-      filter: blur(25px) contrast(300%);
       pointer-events: none;
     }
 
@@ -60,7 +59,7 @@
       z-index: 1;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.8s ease;
+      transition: opacity 0.8s ease 0.3s;
     }
 
     .project-stage.active {
@@ -94,18 +93,18 @@
       filter: brightness(0.65) contrast(135%) grayscale(60%);
     }
 
-    /* COLONNA TESTO: PARTE DAL BORDO SUPERIORE */
+    /* COLONNA TESTO TRIPLICATA, PARTE DALL'ALTO A DESTRA */
     .text-scroll-layer {
       position: absolute;
       top: 0;
-      right: 12vw;
+      right: 10vw;
       width: 200px;
       height: 100vh;
       overflow-y: auto;
       scrollbar-width: none;
       z-index: 2;
-      padding-top: 2.5rem; /* Inizia vicino al bordo alto */
-      padding-bottom: 10vh;
+      padding-top: 2.5rem;
+      padding-bottom: 20vh;
       pointer-events: auto;
     }
 
@@ -159,11 +158,11 @@
   </div>
 
   <script>
-    // ARCHIVIO ESTESO CON MOLTE FOTO E TESTO MOLTO LUNGO
+    // ARCHIVIO CON TESTO TRIPLICATO IN LUNGHEZZA
     const projects = [
       {
         id: "PROJECT_01",
-        text: "REGISTRO DI DECOMPOSIZIONE ESTETICA // Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia. Ossidazione visiva e rumore termico registrati lungo i bordi della struttura monolitica. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva. Strati geologici sovrapposti in sequenza asimmetrica. Nessun segnale di ritorno dalla superficie inferiore. Contrazione della massa e alterazione della prospettiva visiva.",
+        text: "REGISTRO DI DECOMPOSIZIONE ESTETICA // Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente. La sequenza continua a scorrere in modo asincrono rispetto allo spazio circostante, creando una frattura temporale nel flusso dell'interfaccia. Ossidazione visiva e rumore termico registrati lungo i bordi della struttura monolitica. Il vuoto diventa l'unico elemento portante dell'intera composizione visiva. Strati geologici sovrapposti in sequenza asimmetrica. Nessun segnale di ritorno dalla superficie inferiore. Contrazione della massa e alterazione della prospettiva visiva. ANALISI STRUTTURALE // Il frammento fotografico agisce come documento primario di un evento non documentato. Rilievi ad altissimo contrasto per isolare la forma dalla sua funzione originaria. Silenzio operativo prolungato nelle sezioni inferiori del monolite. Interfeze ottiche sovrapposte lungo l'asse di propagazione visiva. Nessun margine di tolleranza visiva. Frequenza di campionamento ridotta a livelli critici per preservare la materia grezza dell'immagine. Sequenza sotterranea in stato di alterazione progressiva. Infrasuoni registrati a bassa frequenza durante la fase di esposizione. La luce penetra come un'incisione meccanica sulla pellicola chimica arida. Nessun contorno definito. La superficie assorbe e riflette l'ombra in un unico blocco cromatico omogeneo. ESPANSIONE PARAGRAFO // La densità visiva aumenta progressivamente all'aumentare della profondità di scroll. Nessuna interruzione nella continuità della materia fotografica. La struttura rigida cede il passo a una sequenza liquida di particelle scure e superfici ossidate. Ogni transizione visiva è calcolata per mantenere la coerenza con l'ambiente ostile circostante.",
         images: [
           'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600',
           'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600',
@@ -175,7 +174,7 @@
       },
       {
         id: "PROJECT_02",
-        text: "SPAZIO GEOLOGICO CORRETTO // Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Tracce visive estrapolate da ambienti sotterranei privi di ossigeno. Il frammento fotografico agisce come documento primario di un evento non documentato. Rilievi ad altissimo contrasto per isolare la forma dalla sua funzione originaria.",
+        text: "SPAZIO GEOLOGICO CORRETTO // Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee. Nessun compromesso stilistico. Tracce visive estrapolate da ambienti sotterranei privi di ossigeno. Rilievi ad altissimo contrasto per isolare la forma dalla sua funzione originaria. OSSERVAZIONI SULLA MATERIA // La superficie non presenta discontinuità apparenti. La grana chimica si fonde con la griglia digitale creando un pattern irrepetibile di rumore visivo. Tracce di corrosione visibile sui bordi laterali del blocco visivo. La colonna di testo scorre in sovrapposizione mantenendo un contrasto cromatico isolato in rosso sanguigno.",
         images: [
           'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600',
           'https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1600',
@@ -196,142 +195,120 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // GENERAZIONE PROCEDURALE NATIIVA DELLE FOTO CON GLITCH SUGLI SPIGOLI
-    function createPhotographicGlitchTexture() {
+    // GENERAZIONE MAPPA FOTOGRAFICA CON SPIGOLI CORROSI / MANGIATI (NO LUCIDO)
+    function createCorrodedTexture() {
       const texCanvas = document.createElement('canvas');
       texCanvas.width = 1024;
       texCanvas.height = 1024;
       const ctx = texCanvas.getContext('2d');
 
-      // Base scura
-      ctx.fillStyle = '#050505';
+      // Base sgranata
+      ctx.fillStyle = '#0a0a0a';
       ctx.fillRect(0, 0, 1024, 1024);
 
-      // Disegno di forme fotografiche e contrasti anatomico-architetturali
-      ctx.fillStyle = '#1a1a1a';
+      // Blocchi fotografici ad alto contrasto
+      ctx.fillStyle = '#1e1e1e';
       ctx.beginPath();
-      ctx.moveTo(100, 0); ctx.lineTo(900, 200); ctx.lineTo(800, 1024); ctx.lineTo(0, 800);
+      ctx.arc(512, 512, 450, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#444444';
-      ctx.fillRect(200, 150, 600, 300);
+      ctx.fillRect(150, 150, 724, 724);
 
-      ctx.fillStyle = '#888888';
-      ctx.fillRect(350, 200, 300, 500);
+      ctx.fillStyle = '#999999';
+      ctx.fillRect(300, 300, 424, 424);
 
-      // GLITCH GRAFICO E OSSIDAZIONE SUGLI SPIGOLI
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-      for (let i = 0; i < 80; i++) {
+      // BORDI MANGIATI / EROSI / RUMORE TOSSICO
+      ctx.fillStyle = '#000000';
+      for (let i = 0; i < 3000; i++) {
         const x = Math.random() * 1024;
         const y = Math.random() * 1024;
-        const w = Math.random() * 250;
-        const h = Math.random() * 3;
-        ctx.fillRect(x, y, w, h);
+        const size = Math.random() * 12 + 2;
+        ctx.fillRect(x, y, size, size);
       }
 
-      ctx.fillStyle = '#ffffff';
-      for (let i = 0; i < 150; i++) {
-        ctx.fillRect(Math.random() * 1024, Math.random() * 1024, 2, 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      for (let i = 0; i < 800; i++) {
+        ctx.fillRect(Math.random() * 1024, Math.random() * 1024, Math.random() * 40, 2);
       }
 
       return new THREE.CanvasTexture(texCanvas);
     }
 
-    const texture = createPhotographicGlitchTexture();
+    const texture = createCorrodedTexture();
     const geometry = new THREE.IcosahedronGeometry(1.8, 0);
 
-    // MATERIALE ROUGHNESS BASSA + EFFETTO SPIGOLI INCISI
+    // MATERIALE OPACO, CORROSO, ZERO LUCIDO, NO SPIGOLI BIANCHI
     const material = new THREE.MeshStandardMaterial({
       map: texture,
-      metalness: 0.9,
-      roughness: 0.1,
+      metalness: 0.0, // Eliminata lucentezza
+      roughness: 1.0, // Superficie totalmente opaca e ruvida
       transparent: true,
       opacity: 0.9,
-      flatShading: true // Mantiene e accentua gli spigoli visibili
+      flatShading: true
     });
 
     const icosahedron = new THREE.Mesh(geometry, material);
     scene.add(icosahedron);
 
-    // SPIGOLI GLITCHATI IN SECONDO LIVELLO
-    const wireframeGeo = new THREE.WireframeGeometry(geometry);
-    const wireframeMat = new THREE.LineBasicMaterial({ 
-      color: 0x666666, 
-      transparent: true, 
-      opacity: 0.35 
-    });
-    const wireframe = new THREE.LineSegments(wireframeGeo, wireframeMat);
-    icosahedron.add(wireframe);
-
-    // LUCI
-    const light1 = new THREE.DirectionalLight(0xffffff, 3.2);
+    // LUCI DRAMMATICHE TEATRALI
+    const light1 = new THREE.DirectionalLight(0xffffff, 2.2);
     light1.position.set(5, 5, 5);
     scene.add(light1);
 
-    const light2 = new THREE.DirectionalLight(0x333333, 1.5);
-    light2.position.set(-5, -5, -2);
-    scene.add(light2);
-
-    const ambientLight = new THREE.AmbientLight(0x0a0a0a);
+    const ambientLight = new THREE.AmbientLight(0x151515);
     scene.add(ambientLight);
 
-    // DRAG MOUSE / TOUCH
-    let isDragging = false;
-    let previousMousePosition = { x: 0, y: 0 };
-
-    window.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      previousMousePosition = { x: e.clientX, y: e.clientY };
-    });
+    // MOVIMENTO AUTONOMO + TRACCIAMENTO MOUSE
+    let targetRotationX = 0;
+    let targetRotationY = 0;
+    let mouseX = 0;
+    let mouseY = 0;
 
     window.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      const deltaMove = {
-        x: e.clientX - previousMousePosition.x,
-        y: e.clientY - previousMousePosition.y
-      };
-
-      icosahedron.rotation.y += deltaMove.x * 0.008;
-      icosahedron.rotation.x += deltaMove.y * 0.008;
-
-      previousMousePosition = { x: e.clientX, y: e.clientY };
+      // Normalizzazione coordinate mouse (-1 a 1)
+      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
     });
 
-    window.addEventListener('mouseup', () => { isDragging = false; });
-
-    // INTERAZIONE CLICK SULLE FACCE
+    // INTERAZIONE CLICK & MORPHING
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+    const mouseVector = new THREE.Vector2();
 
     window.addEventListener('click', (e) => {
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      mouseVector.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseVector.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-      raycaster.setFromCamera(mouse, camera);
+      raycaster.setFromCamera(mouseVector, camera);
       const intersects = raycaster.intersectObject(icosahedron);
 
       if (intersects.length > 0) {
         const faceIndex = intersects[0].faceIndex;
         const projectIndex = faceIndex % projects.length;
-        openProject(projectIndex);
+
+        // INIZIO TRANSIZIONE MORPHING EXPAND
+        canvas.classList.add('morphing');
+        
+        setTimeout(() => {
+          openProject(projectIndex);
+        }, 700);
       }
     });
 
-    // ANIMAZIONE ROTAZIONE CON MICRO-GLITCH SUGLI SPIGOLI
+    // LOOP ANIMAZIONE CON SEGUIMENTO MOUSE
     function animate() {
       requestAnimationFrame(animate);
 
-      if (!isDragging) {
-        icosahedron.rotation.x += 0.0025;
-        icosahedron.rotation.y += 0.0045;
-      }
+      // Rotazione di base autonoma
+      icosahedron.rotation.x += 0.002;
+      icosahedron.rotation.y += 0.003;
 
-      // Micro-vibrazione glitchata casuale sugli spigoli
-      if (Math.random() < 0.04) {
-        wireframe.position.x = (Math.random() - 0.5) * 0.03;
-      } else {
-        wireframe.position.x = 0;
-      }
+      // Inseguimento fluido del mouse
+      targetRotationY = mouseX * 0.8;
+      targetRotationX = -mouseY * 0.8;
+
+      icosahedron.rotation.y += (targetRotationY - icosahedron.rotation.y) * 0.03;
+      icosahedron.rotation.x += (targetRotationX - icosahedron.rotation.x) * 0.03;
 
       renderer.render(scene, camera);
     }
@@ -345,36 +322,3 @@
 
     // APERTURA E CHIUSURA PROGETTI
     const projectStage = document.getElementById('projectStage');
-    const imageLayer = document.getElementById('imageLayer');
-    const redText = document.getElementById('redText');
-
-    function openProject(index) {
-      const proj = projects[index];
-
-      imageLayer.innerHTML = '';
-      proj.images.forEach(url => {
-        const block = document.createElement('div');
-        block.className = 'image-block';
-        const img = document.createElement('img');
-        img.src = url;
-        block.appendChild(img);
-        imageLayer.appendChild(block);
-      });
-
-      redText.innerText = proj.text;
-
-      canvas.classList.add('hidden');
-      setTimeout(() => {
-        projectStage.classList.add('active');
-      }, 400);
-    }
-
-    function closeProject() {
-      projectStage.classList.remove('active');
-      setTimeout(() => {
-        canvas.classList.remove('hidden');
-      }, 300);
-    }
-  </script>
-</body>
-</html>
