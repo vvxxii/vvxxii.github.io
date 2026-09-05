@@ -14,6 +14,10 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body, #webgl-canvas, .lobe-symbol, .popup, .popup-close, .popup-backdrop {
+      cursor: none;
+    }
+
     body {
       background-color: #000;
       color: #888;
@@ -28,21 +32,11 @@
       top: 0; left: 0;
       width: 100vw; height: 100vh;
       z-index: 10;
-      cursor: crosshair;
-      transition: transform 0.9s cubic-bezier(0.7,0,0.3,1), opacity 0.8s ease, filter 0.8s ease;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
     }
 
-    #webgl-canvas.morphing {
-      transform: scale(4.5);
-      filter: blur(15px) contrast(200%);
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    /* lampo di glitch granulare a schermo intero, innescato via JS a intervalli irregolari */
-    #webgl-canvas.screen-glitch {
-      animation: screenGlitchPop 0.12s steps(2);
-    }
+    #webgl-canvas.screen-glitch { animation: screenGlitchPop 0.12s steps(2); }
     @keyframes screenGlitchPop {
       0%   { clip-path: inset(0 0 0 0); transform: translate(0,0); }
       30%  { clip-path: inset(10% 0 60% 0); transform: translate(-6px,0); }
@@ -51,128 +45,151 @@
       100% { clip-path: inset(0 0 0 0); transform: translate(0,0); }
     }
 
-    /* vignettatura globale + atmosfera dungeon — sopra anche alle pagine progetto */
+    /* vignettatura + grana: SOLO sulla home, i popup restano fuori */
     #vignette {
       position: fixed; inset: 0;
-      z-index: 40;
+      z-index: 20;
       pointer-events: none;
       background: radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.42) 78%, rgba(0,0,0,0.88) 100%);
       mix-blend-mode: multiply;
       animation: vignetteGlitch 5s infinite steps(1);
     }
     @keyframes vignetteGlitch {
-      0%, 100% { opacity: 1; }
-      41% { opacity: 1; }
-      42% { opacity: 0.6; }
-      43% { opacity: 1; }
-      77% { opacity: 1; }
-      78% { opacity: 0.75; transform: translateX(3px); }
-      79% { opacity: 1; transform: translateX(0); }
+      0%, 100% { opacity: 1; } 41% { opacity: 1; } 42% { opacity: 0.6; } 43% { opacity: 1; }
+      77% { opacity: 1; } 78% { opacity: 0.75; transform: translateX(3px); } 79% { opacity: 1; transform: translateX(0); }
     }
-
-    /* grana pellicola / rumore che flickera, granulare e veloce — anche sopra le pagine progetto */
     #grain {
       position: fixed; inset: 0;
-      z-index: 41;
+      z-index: 21;
       pointer-events: none;
       opacity: 0.07;
       background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
       animation: grainShift 0.15s steps(2) infinite;
     }
     @keyframes grainShift {
-      0% { transform: translate(0,0); }
-      50% { transform: translate(-3%,2%); }
-      100% { transform: translate(2%,-3%); }
+      0% { transform: translate(0,0); } 50% { transform: translate(-3%,2%); } 100% { transform: translate(2%,-3%); }
     }
 
-    .project-stage {
-      position: absolute; top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      display: flex;
+    /* simboli emoji al culmine dei tentacoli, sopra alla grana */
+    #lobeSymbols {
+      position: fixed; inset: 0;
+      z-index: 25;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #lobeSymbols.hidden { opacity: 0; }
+    .lobe-symbol {
+      position: absolute;
+      top: 0; left: 0;
+      font-size: 1.55rem;
+      pointer-events: auto;
+      filter: drop-shadow(0 0 6px rgba(184,0,0,0.55));
+      user-select: none;
+      will-change: transform, opacity, left, top;
+    }
+    .lobe-symbol.dim { opacity: 0 !important; pointer-events: none; }
+
+    /* cursore custom: croce gialla glitchata di default, bastone di Asclepio sugli interattivi */
+    #customCursor {
+      position: fixed; top: 0; left: 0;
+      z-index: 100;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      font-size: 1.15rem;
+      color: #ffd93d;
+      text-shadow: 0 0 6px rgba(255,217,61,0.85), 0 0 2px #000;
+    }
+    #customCursor .c-cross { display: inline-block; animation: cursorGlitch 1.4s infinite steps(1); }
+    #customCursor .c-rod { display: none; color: #ff9a3d; text-shadow: 0 0 8px rgba(255,154,61,0.9); }
+    #customCursor.interactive .c-cross { display: none; }
+    #customCursor.interactive .c-rod { display: inline-block; }
+    @keyframes cursorGlitch {
+      0%, 100% { transform: translate(0,0); opacity: 1; }
+      12% { transform: translate(1px,-1px); opacity: 0.65; }
+      24% { transform: translate(-1px,1px); opacity: 1; }
+      48% { transform: translate(0,0); }
+      52% { transform: translate(2px,0); opacity: 0.55; }
+      56% { transform: translate(0,0); opacity: 1; }
+    }
+
+    /* backdrop + popup: si sovrappongono alla home, non toccati da vignetta/grana/glitch */
+    .popup-backdrop {
+      position: fixed; inset: 0;
       z-index: 30;
+      background: rgba(0,0,0,0.62);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.8s ease 0.3s;
-      background: #000;
+      transition: opacity 0.4s ease;
     }
-    .project-stage.active { opacity: 1; pointer-events: auto; }
+    .popup-backdrop.active { opacity: 1; pointer-events: auto; }
 
-    .image-scroll-layer {
-      position: absolute; top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      overflow-y: auto;
-      scrollbar-width: none;
-      z-index: 1;
+    .popup {
+      position: fixed;
+      background: #0a0707;
+      border: 1px solid rgba(184,0,0,0.4);
+      border-radius: 18px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.85);
+      z-index: 31;
+      opacity: 0;
+      transform: scale(0.94) translateY(14px);
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      overflow: hidden;
     }
-    .image-scroll-layer::-webkit-scrollbar { display: none; }
+    .popup.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+    .popup.dragging { transition: none; }
 
-    .image-block { width: 100vw; height: 100vh; position: relative; }
+    .popup-inner { width: 100%; height: 100%; position: relative; animation: floatBob 7s ease-in-out infinite; }
 
-    .image-block img {
+    .popup-photo { top: 5vh; left: 5vw; width: min(58vw, 900px); height: 90vh; }
+    .popup-photo .popup-inner { animation-duration: 7.5s; }
+
+    .popup-text { top: 5vh; right: 5vw; width: min(15vw, 230px); height: 90vh; }
+    .popup-text .popup-inner { animation-duration: 9s; animation-delay: 0.6s; }
+
+    @keyframes floatBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-9px); }
+    }
+
+    .popup-scroll { width: 100%; height: 100%; overflow-y: auto; scrollbar-width: none; }
+    .popup-scroll::-webkit-scrollbar { display: none; }
+
+    .popup-image-block { width: 100%; height: 82vh; position: relative; }
+    .popup-image-block img {
       width: 100%; height: 100%;
       object-fit: cover;
-      filter: brightness(0.5) contrast(140%) grayscale(70%) sepia(20%);
-      opacity: 0.88;
+      filter: brightness(0.82) contrast(112%) grayscale(15%);
+      opacity: 1;
     }
-
-    .image-block::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse at center, rgba(0,0,0,0) 30%, rgba(0,0,0,0.85) 100%);
-      pointer-events: none;
-    }
-
-    .text-scroll-layer {
-      position: absolute; top: 0; right: 10vw;
-      width: 200px; height: 100vh;
-      overflow-y: auto;
-      scrollbar-width: none;
-      z-index: 2;
-      padding-top: 2.5rem;
-      padding-bottom: 20vh;
-      pointer-events: auto;
-    }
-    .text-scroll-layer::-webkit-scrollbar { display: none; }
 
     .red-text-content {
+      padding: 5px 7px;
       color: #b80000;
-      font-size: 0.58rem;
+      font-size: 0.56rem;
       font-weight: 400;
       line-height: 1.5;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
       text-align: justify;
       background: transparent;
-      text-shadow: 0 0 6px rgba(184,0,0,0.35);
-      animation: textGlitch 2.6s infinite steps(1);
-      will-change: transform, clip-path;
+      animation: textGlow 4.5s ease-in-out infinite;
     }
-    @keyframes textGlitch {
-      0%   { transform: translate(0,0); clip-path: inset(0 0 0 0); text-shadow: 0 0 6px rgba(184,0,0,0.35); }
-      4%   { transform: translate(-1px,0); clip-path: inset(0 0 0 0); text-shadow: 2px 0 rgba(0,200,200,0.4), -2px 0 rgba(184,0,0,0.6); }
-      6%   { transform: translate(1px,0); clip-path: inset(20% 0 30% 0); text-shadow: -3px 0 rgba(0,200,200,0.5), 3px 0 rgba(184,0,0,0.7); }
-      8%   { transform: translate(0,0); clip-path: inset(0 0 0 0); text-shadow: 0 0 6px rgba(184,0,0,0.35); }
-      33%  { transform: translate(0,0); clip-path: inset(0 0 0 0); text-shadow: 0 0 6px rgba(184,0,0,0.35); }
-      34%  { transform: translate(2px,0); clip-path: inset(45% 0 5% 0); text-shadow: -2px 0 rgba(0,180,180,0.55), 2px 0 rgba(184,0,0,0.75); }
-      35%  { transform: translate(-2px,0); clip-path: inset(5% 0 60% 0); text-shadow: 3px 0 rgba(0,180,180,0.5), -3px 0 rgba(184,0,0,0.7); }
-      37%  { transform: translate(0,0); clip-path: inset(0 0 0 0); text-shadow: 0 0 6px rgba(184,0,0,0.35); }
-      70%  { transform: translate(0,0); clip-path: inset(0 0 0 0); text-shadow: 0 0 6px rgba(184,0,0,0.35); }
-      71%  { transform: translate(-1px,0); clip-path: inset(70% 0 2% 0); text-shadow: 2px 0 rgba(0,200,200,0.45), -2px 0 rgba(184,0,0,0.65); }
-      73%  { transform: translate(1px,0); clip-path: inset(2% 0 75% 0); text-shadow: -2px 0 rgba(0,200,200,0.45), 2px 0 rgba(184,0,0,0.65); }
-      75%  { transform: translate(0,0); clip-path: inset(0 0 0 0); text-shadow: 0 0 6px rgba(184,0,0,0.35); }
-      100% { transform: translate(0,0); clip-path: inset(0 0 0 0); text-shadow: 0 0 6px rgba(184,0,0,0.35); }
+    @keyframes textGlow {
+      0%, 100% { color: #b80000; text-shadow: 0 0 6px rgba(184,0,0,0.35); }
+      50%      { color: #d9701f; text-shadow: 0 0 15px rgba(255,150,50,0.6); }
     }
 
-    .close-btn {
-      position: fixed; top: 2.5rem; left: 3rem;
+    .popup-close {
+      position: absolute; top: 0.6rem; right: 0.9rem;
       color: #888;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.5rem; line-height: 1;
-      cursor: pointer; z-index: 100;
+      font-size: 1.2rem; line-height: 1;
+      z-index: 5;
       background: transparent; border: none;
       transition: color 0.3s ease, transform 0.3s ease;
     }
-    .close-btn:hover { color: #b80000; transform: scale(1.2); }
+    .popup-close:hover { color: #b80000; transform: scale(1.2); }
   </style>
 </head>
 <body>
@@ -180,12 +197,26 @@
   <canvas id="webgl-canvas"></canvas>
   <div id="vignette"></div>
   <div id="grain"></div>
+  <div id="lobeSymbols"></div>
 
-  <div class="project-stage" id="projectStage">
-    <button class="close-btn" onclick="closeProject()">✕</button>
-    <div class="image-scroll-layer" id="imageLayer"></div>
-    <div class="text-scroll-layer" id="textLayer">
-      <div class="red-text-content" id="redText"></div>
+  <div id="customCursor">
+    <span class="c-cross">+</span>
+    <span class="c-rod">⚕</span>
+  </div>
+
+  <div class="popup-backdrop" id="popupBackdrop"></div>
+  <div class="popup popup-photo" id="popupPhoto">
+    <div class="popup-inner">
+      <button class="popup-close" onclick="closeProject()">✕</button>
+      <div class="popup-scroll" id="imageLayer"></div>
+    </div>
+  </div>
+  <div class="popup popup-text" id="popupText">
+    <div class="popup-inner">
+      <button class="popup-close" onclick="closeProject()">✕</button>
+      <div class="popup-scroll">
+        <div class="red-text-content" id="redText"></div>
+      </div>
     </div>
   </div>
 
@@ -199,7 +230,8 @@
           'https://picsum.photos/id/1040/1600/1000',
           'https://picsum.photos/id/1062/1600/1000',
           'https://picsum.photos/id/1069/1600/1000'
-        ]
+        ],
+        symbols: ["👁️", "🦴", "🕯️"]
       },
       {
         id: "PROJECT_02",
@@ -207,79 +239,25 @@
         images: [
           'https://picsum.photos/id/1050/1600/1000',
           'https://picsum.photos/id/1060/1600/1000'
-        ]
+        ],
+        symbols: ["🕷️", "🦂", "⚰️"]
       }
-    ];
-
-    // immagini usate come "pelle" del blob (mosaico triplanare bn / colore)
-    const skinPool = [
-      'https://picsum.photos/id/1025/500/500','https://picsum.photos/id/1040/500/500',
-      'https://picsum.photos/id/1062/500/500','https://picsum.photos/id/1050/500/500',
-      'https://picsum.photos/id/1060/500/500','https://picsum.photos/id/1069/500/500'
     ];
 
     const LOBE_COUNT = 6;
+    const RENDER_SCALE = 0.42; // bassa risoluzione voluta: aspetto marcio, a blocchi
 
-    function loadImage(url) {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
-        img.src = url;
-      });
-    }
-
-    // mosaico usato per la texture triplanare: bn sempre presente, colore che
-    // emerge solo nell'alone del lobo in evidenza
-    async function buildMosaic(urls, mode) {
-      const size = 1024, cols = 3, rows = 2;
-      const cw = size / cols, ch = size / rows;
-      const c = document.createElement('canvas');
-      c.width = size; c.height = size;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#050505';
-      ctx.fillRect(0, 0, size, size);
-
-      for (let i = 0; i < urls.length; i++) {
-        const img = await loadImage(urls[i]);
-        if (!img) continue;
-        const cx = (i % cols) * cw, cy = Math.floor(i / cols) * ch;
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(cx, cy, cw, ch);
-        ctx.clip();
-        ctx.filter = mode === 'bw'
-          ? 'grayscale(100%) contrast(122%) brightness(0.62)'
-          : 'saturate(230%) contrast(116%) brightness(0.9)';
-        const scale = Math.max(cw / img.width, ch / img.height);
-        const w = img.width * scale, h = img.height * scale;
-        ctx.drawImage(img, cx - (w - cw) / 2, cy - (h - ch) / 2, w, h);
-        ctx.restore();
-      }
-      ctx.filter = 'none';
-
-      const tex = new THREE.CanvasTexture(c);
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      tex.needsUpdate = true;
-      return tex;
-    }
-
-    // GLSL — fullscreen raymarch: un unico "organismo" scolpito da SDF,
-    // nessun poligono: le facce nette diventano lobi organici fusi tra loro
     const VERT = `
-      void main() {
-        gl_Position = vec4(position.xy, 0.0, 1.0);
-      }
+      void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }
     `;
 
     const FRAG = `
       precision highp float;
       #define LOBE_COUNT ${LOBE_COUNT}
-      #define MAX_STEPS 90
-      #define MAX_DIST 20.0
-      #define SURF_DIST 0.0015
+      #define SEGS 4
+      #define MAX_STEPS 80
+      #define MAX_DIST 24.0
+      #define SURF_DIST 0.002
 
       uniform vec2  uResolution;
       uniform float uTime;
@@ -289,13 +267,12 @@
       uniform vec3  uCamForward;
       uniform float uTanFov;
       uniform mat3  uInvRot;
-      uniform vec3  uLobePos[LOBE_COUNT];
+      uniform vec3  uLobeDir[LOBE_COUNT];
+      uniform float uLobeLen[LOBE_COUNT];
       uniform float uLobeRadius[LOBE_COUNT];
       uniform float uLobeGlow[LOBE_COUNT];
       uniform float uLobePhase[LOBE_COUNT];
       uniform float uGlitch;
-      uniform sampler2D uAlbedoTex;
-      uniform sampler2D uColorTex;
 
       float hash13(vec3 p) {
         p = fract(p * 0.3183099 + 0.1);
@@ -304,31 +281,19 @@
       }
 
       float vnoise(vec3 p) {
-        vec3 i = floor(p);
-        vec3 f = fract(p);
+        vec3 i = floor(p); vec3 f = fract(p);
         f = f * f * (3.0 - 2.0 * f);
-        float n000 = hash13(i + vec3(0.0,0.0,0.0));
-        float n100 = hash13(i + vec3(1.0,0.0,0.0));
-        float n010 = hash13(i + vec3(0.0,1.0,0.0));
-        float n110 = hash13(i + vec3(1.0,1.0,0.0));
-        float n001 = hash13(i + vec3(0.0,0.0,1.0));
-        float n101 = hash13(i + vec3(1.0,0.0,1.0));
-        float n011 = hash13(i + vec3(0.0,1.0,1.0));
-        float n111 = hash13(i + vec3(1.0,1.0,1.0));
-        return mix(
-          mix(mix(n000,n100,f.x), mix(n010,n110,f.x), f.y),
-          mix(mix(n001,n101,f.x), mix(n011,n111,f.x), f.y),
-          f.z
-        );
+        float n000=hash13(i+vec3(0,0,0)), n100=hash13(i+vec3(1,0,0));
+        float n010=hash13(i+vec3(0,1,0)), n110=hash13(i+vec3(1,1,0));
+        float n001=hash13(i+vec3(0,0,1)), n101=hash13(i+vec3(1,0,1));
+        float n011=hash13(i+vec3(0,1,1)), n111=hash13(i+vec3(1,1,1));
+        return mix(mix(mix(n000,n100,f.x),mix(n010,n110,f.x),f.y),
+                    mix(mix(n001,n101,f.x),mix(n011,n111,f.x),f.y), f.z);
       }
 
       float fbm(vec3 p) {
         float v = 0.0, a = 0.5;
-        for (int i = 0; i < 4; i++) {
-          v += a * vnoise(p);
-          p *= 2.02;
-          a *= 0.5;
-        }
+        for (int i = 0; i < 4; i++) { v += a * vnoise(p); p *= 2.02; a *= 0.5; }
         return v;
       }
 
@@ -337,39 +302,52 @@
         return mix(b, a, h) - k * h * (1.0 - h);
       }
 
-      float sdSphere(vec3 p, vec3 c, float r) {
-        return length(p - c) - r;
+      float sdSphere(vec3 p, vec3 c, float r) { return length(p - c) - r; }
+
+      float lobeExt(float phase) {
+        return 0.28 + 0.72 * (0.5 + 0.5 * sin(uTime * 0.32 + phase * 2.0));
       }
 
       float sceneSDF(vec3 p, out float glowAmt) {
         vec3 op = uInvRot * p;
 
-        float breathe = 0.05 * sin(uTime * 0.8);
-        float d = sdSphere(op, vec3(0.0), 0.95 + breathe * 0.3);
+        float breathe = 0.04 * sin(uTime * 0.8);
+        float d = sdSphere(op, vec3(0.0), 0.82 + breathe * 0.25);
         glowAmt = 0.0;
 
         for (int i = 0; i < LOBE_COUNT; i++) {
-          float pulse = 0.06 * sin(uTime * 1.3 + uLobePhase[i]);
-          float r = uLobeRadius[i] + pulse + uLobeGlow[i] * 0.07;
-          float ds = sdSphere(op, uLobePos[i], r);
-          d = smin(d, ds, 0.45);
+          float ext = lobeExt(uLobePhase[i]);
+          float len = uLobeLen[i] * ext;
 
-          float dist = length(op - uLobePos[i]);
-          float sigma = uLobeRadius[i] * 1.6;
+          // tentacolo: catena di sfere che si assottiglia dalla base alla punta
+          for (int s = 0; s < SEGS; s++) {
+            float h = float(s) / float(SEGS - 1);
+            vec3 segPos = uLobeDir[i] * mix(0.22, len, h);
+            float segR = uLobeRadius[i] * mix(1.7, 0.42, h) * (0.55 + 0.45 * ext);
+            d = smin(d, sdSphere(op, segPos, segR), 0.24);
+          }
+
+          vec3 tip = uLobeDir[i] * len;
+          float dist = length(op - tip);
+          float sigma = uLobeRadius[i] * 2.4;
           glowAmt += uLobeGlow[i] * exp(-(dist * dist) / (2.0 * sigma * sigma));
         }
 
-        float wrinkle = fbm(op * 3.2 + uTime * 0.05) - 0.5;
-        d += wrinkle * 0.05;
+        float wrinkle = fbm(op * 3.4 + uTime * 0.05) - 0.5;
+        d += wrinkle * 0.045;
+
+        float decay = fbm(op * 2.1 + uTime * 0.12);
+        float holeMask = smoothstep(0.53, 0.64, decay);
+        d += holeMask * 2.2;
 
         float glitchNoise = fbm(op * 9.0 + uTime * 6.0);
-        d -= step(0.82, glitchNoise) * uGlitch * 0.14;
+        d -= step(0.83, glitchNoise) * uGlitch * 0.13;
 
         return d;
       }
 
       vec3 calcNormal(vec3 p) {
-        vec2 e = vec2(0.0015, 0.0);
+        vec2 e = vec2(0.002, 0.0);
         float g;
         return normalize(vec3(
           sceneSDF(p + e.xyy, g) - sceneSDF(p - e.xyy, g),
@@ -378,22 +356,11 @@
         ));
       }
 
-      vec3 triplanar(sampler2D tex, vec3 p, vec3 n) {
-        vec3 an = abs(n);
-        an /= (an.x + an.y + an.z + 0.0001);
-        vec3 cx = texture2D(tex, p.yz * 0.5 + 0.5).rgb;
-        vec3 cy = texture2D(tex, p.xz * 0.5 + 0.5).rgb;
-        vec3 cz = texture2D(tex, p.xy * 0.5 + 0.5).rgb;
-        return cx * an.x + cy * an.y + cz * an.z;
-      }
-
       void main() {
         vec2 uv = (gl_FragCoord.xy / uResolution - 0.5) * 2.0;
         uv.x *= uResolution.x / uResolution.y;
 
-        // corruzione a blocchi: la direzione del raggio "salta" a blocchi discreti,
-        // dà l'effetto insetto/digitale corrotto quando uGlitch è alto
-        vec2 blockUv = floor(gl_FragCoord.xy / 9.0);
+        vec2 blockUv = floor(gl_FragCoord.xy / 7.0);
         float blockN = hash13(vec3(blockUv, floor(uTime * 30.0)));
         vec2 jitter = (blockN > 0.85)
           ? (vec2(hash13(vec3(blockUv,1.0)), hash13(vec3(blockUv,2.0))) - 0.5) * uGlitch * 0.05
@@ -402,10 +369,7 @@
         vec3 rd = normalize(uCamForward + (uv.x + jitter.x) * uTanFov * uCamRight + (uv.y + jitter.y) * uTanFov * uCamUp);
         vec3 ro = uCamPos;
 
-        float t = 0.0;
-        float glow = 0.0;
-        bool hit = false;
-        int steps = 0;
+        float t = 0.0; float glow = 0.0; bool hit = false; int steps = 0;
         vec3 p = ro;
 
         for (int i = 0; i < MAX_STEPS; i++) {
@@ -423,6 +387,7 @@
         if (hit) {
           vec3 n = calcNormal(p);
           vec3 op = uInvRot * p;
+          vec3 viewDir = -rd;
 
           vec3 lightPos = vec3(2.2, 1.6, 3.2);
           vec3 lightDir = normalize(lightPos - p);
@@ -431,21 +396,29 @@
           vec3 rimDir = normalize(vec3(-3.0, -1.5, -2.0) - p);
           float rim = max(dot(n, rimDir), 0.0);
 
-          float fres = pow(1.0 - max(dot(n, -rd), 0.0), 3.0);
+          float fres = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
 
-          vec3 albedoBW = triplanar(uAlbedoTex, op, n);
-          vec3 albedoColor = triplanar(uColorTex, op, n);
-          vec3 albedo = mix(albedoBW, albedoColor, clamp(glow, 0.0, 1.0));
+          // pelle procedurale organica lucida, niente texture fotografiche
+          float mottle = fbm(op * 2.6);
+          vec3 baseColor = mix(vec3(0.05,0.018,0.018), vec3(0.16,0.05,0.045), mottle);
 
           vec3 warm = vec3(1.0, 0.34, 0.12);
           vec3 cool = vec3(0.10, 0.05, 0.20);
 
-          col = albedo * (0.08 + diff * 0.9) * warm;
-          col += albedo * rim * 0.22 * cool;
+          col = baseColor * (0.07 + diff * 0.85) * warm;
+          col += baseColor * rim * 0.2 * cool;
           col += fres * warm * 0.3;
+
+          // specular stretto -> superficie lucida, roughness bassa
+          vec3 halfDir = normalize(lightDir + viewDir);
+          float spec = pow(max(dot(n, halfDir), 0.0), 70.0);
+          col += vec3(1.0, 0.92, 0.85) * spec * 0.9;
+          float specRim = pow(max(dot(n, normalize(rimDir + viewDir)), 0.0), 40.0);
+          col += cool * specRim * 0.5;
+
           col += warm * glow * 1.3;
 
-          float fog = 1.0 - exp(-t * 0.11);
+          float fog = 1.0 - exp(-t * 0.1);
           col = mix(col, vec3(0.0), fog);
 
           col *= 0.65 + 0.35 * (1.0 - float(steps) / float(MAX_STEPS));
@@ -458,47 +431,78 @@
       }
     `;
 
-    (async function init() {
+    let camDist = 5.5;
+    const ZOOM_MIN = 2.4, ZOOM_MAX = 9.5;
+    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+
+    (function init() {
       const canvas = document.getElementById('webgl-canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+      renderer.setPixelRatio(1);
+
+      function sizeRenderer() {
+        const w = Math.max(2, Math.floor(window.innerWidth * RENDER_SCALE));
+        const h = Math.max(2, Math.floor(window.innerHeight * RENDER_SCALE));
+        renderer.setSize(w, h, false);
+        return { w, h };
+      }
+      let res = sizeRenderer();
 
       const scene = new THREE.Scene();
       const orthoCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-      // camera "virtuale" (solo matematica, non renderizza): fissa, il movimento
-      // lo dà la rotazione del blob stesso
-      const camPos = new THREE.Vector3(0, 0, 5.5);
+      const camPos = new THREE.Vector3(0, 0, camDist);
       const camForward = new THREE.Vector3(0, 0, -1);
       const camRight = new THREE.Vector3(1, 0, 0);
       const camUp = new THREE.Vector3(0, 1, 0);
       const FOV = THREE.MathUtils.degToRad(45);
       const tanFov = Math.tan(FOV / 2);
 
-      // lobi distribuiti su una sfera (fibonacci sphere), ognuno legato a un progetto
+      // tentacoli: lunghezze diverse tra loro (non tutti uguali), simboli distinti per progetto
       const lobes = [];
+      let symCursor = [0, 0];
       for (let i = 0; i < LOBE_COUNT; i++) {
         const y = 1 - (i / (LOBE_COUNT - 1)) * 2;
         const r = Math.sqrt(Math.max(0, 1 - y * y));
         const theta = Math.PI * (3 - Math.sqrt(5)) * i;
-        const pos = new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r).multiplyScalar(1.05);
+        const dir = new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r).normalize();
+        const projectIndex = i % projects.length;
+        const proj = projects[projectIndex];
+        const symbol = proj.symbols[symCursor[projectIndex] % proj.symbols.length];
+        symCursor[projectIndex]++;
         lobes.push({
-          local: pos,
-          radius: 0.4 + Math.random() * 0.12,
-          project: i % projects.length,
+          dir,
+          len: 1.35 + Math.random() * 1.35, // tentacoli di lunghezza diversa tra loro
+          radius: 0.15 + Math.random() * 0.07,
+          project: projectIndex,
+          symbol,
           phase: Math.random() * Math.PI * 2,
-          glow: 0
+          glow: 0,
+          el: null, dispX: null, dispY: null
         });
       }
 
-      const [bwTex, colorTex] = await Promise.all([
-        buildMosaic(skinPool, 'bw'),
-        buildMosaic(skinPool, 'color')
-      ]);
+      const symbolsRoot = document.getElementById('lobeSymbols');
+      const cursorEl = document.getElementById('customCursor');
+
+      lobes.forEach((l, i) => {
+        const el = document.createElement('div');
+        el.className = 'lobe-symbol dim';
+        el.textContent = l.symbol;
+        el.addEventListener('mouseenter', () => { hoveredLobe = i; cursorEl.classList.add('interactive'); });
+        el.addEventListener('mouseleave', () => { if (hoveredLobe === i) hoveredLobe = -1; cursorEl.classList.remove('interactive'); });
+        el.addEventListener('click', (ev) => { ev.stopPropagation(); triggerGlitchPop(); openProject(l.project); });
+        symbolsRoot.appendChild(el);
+        l.el = el;
+      });
+
+      document.querySelectorAll('.popup-close').forEach(btn => {
+        btn.addEventListener('mouseenter', () => cursorEl.classList.add('interactive'));
+        btn.addEventListener('mouseleave', () => cursorEl.classList.remove('interactive'));
+      });
 
       const uniforms = {
-        uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        uResolution: { value: new THREE.Vector2(res.w, res.h) },
         uTime: { value: 0 },
         uCamPos: { value: camPos },
         uCamRight: { value: camRight },
@@ -506,145 +510,146 @@
         uCamForward: { value: camForward },
         uTanFov: { value: tanFov },
         uInvRot: { value: new THREE.Matrix3() },
-        uLobePos: { value: lobes.map(l => l.local) },
+        uLobeDir: { value: lobes.map(l => l.dir) },
+        uLobeLen: { value: lobes.map(l => l.len) },
         uLobeRadius: { value: lobes.map(l => l.radius) },
         uLobeGlow: { value: lobes.map(() => 0) },
         uLobePhase: { value: lobes.map(l => l.phase) },
-        uGlitch: { value: 0 },
-        uAlbedoTex: { value: bwTex },
-        uColorTex: { value: colorTex }
+        uGlitch: { value: 0 }
       };
 
-      const material = new THREE.ShaderMaterial({
-        vertexShader: VERT,
-        fragmentShader: FRAG,
-        uniforms
-      });
+      const material = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms });
       const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
       scene.add(quad);
 
-      // ROTAZIONE via drag/hover, inerzia, più idle spin — stesso feeling di prima
       let yaw = 0, pitch = 0;
       let velYaw = 0, velPitch = 0;
-      let isDragHover = false;
-      let prevX = 0, prevY = 0;
+      let lastX = window.innerWidth / 2, lastY = window.innerHeight / 2;
+      let rotM3 = new THREE.Matrix3();
       let invRot = new THREE.Matrix3();
+      let hoveredLobe = -1;
 
       function updateRotation(dt) {
-        if (isDragHover) {
-          yaw += velYaw;
-          pitch += velPitch;
-        } else {
-          velYaw *= 0.95;
-          velPitch *= 0.95;
-          yaw += velYaw + 0.15 * dt;
-          pitch += velPitch + 0.07 * dt;
-        }
+        velYaw *= 0.94;
+        velPitch *= 0.94;
+        yaw += velYaw + 0.12 * dt;
+        pitch += velPitch + 0.05 * dt;
+        pitch = THREE.MathUtils.clamp(pitch, -1.1, 1.1);
+
         const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), yaw);
         const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), pitch);
         const q = qYaw.multiply(qPitch);
         const M4 = new THREE.Matrix4().makeRotationFromQuaternion(q);
-        const M3 = new THREE.Matrix3().setFromMatrix4(M4);
-        invRot.copy(M3).transpose();
+        rotM3.setFromMatrix4(M4);
+        invRot.copy(rotM3).transpose();
         uniforms.uInvRot.value.copy(invRot);
       }
 
-      // ray dal mouse verso il mondo (camera fissa) — usato per hover/click sui lobi
-      function rayFromMouse(clientX, clientY) {
-        let ux = (clientX / window.innerWidth - 0.5) * 2.0;
-        let uy = -(clientY / window.innerHeight - 0.5) * 2.0;
-        ux *= window.innerWidth / window.innerHeight;
-        const dir = camForward.clone()
-          .add(camRight.clone().multiplyScalar(ux * tanFov))
-          .add(camUp.clone().multiplyScalar(uy * tanFov))
-          .normalize();
-        return dir;
-      }
-
-      // test raggio-sfera in object space (dopo aver applicato invRot), per capire
-      // se il mouse è sopra il "corpo" del blob o su un lobo preciso
-      function raySphereHit(ro, rd, center, radius) {
-        const oc = ro.clone().sub(center);
-        const b = oc.dot(rd);
-        const c = oc.dot(oc) - radius * radius;
-        const disc = b * b - c;
-        if (disc < 0) return Infinity;
-        const t = -b - Math.sqrt(disc);
-        return t > 0 ? t : Infinity;
-      }
-
-      let hoveredLobe = -1;
-
-      function pickLobe(clientX, clientY) {
-        const rd = rayFromMouse(clientX, clientY);
-        const roObj = camPos.clone().applyMatrix3(invRot);
-        const rdObj = rd.clone().applyMatrix3(invRot);
-
-        // corpo del blob: raggio d'ingombro ~1.9
-        const bodyT = raySphereHit(roObj, rdObj, new THREE.Vector3(0,0,0), 1.9);
-        isDragHover = isFinite(bodyT);
-
-        let best = -1, bestT = Infinity;
-        lobes.forEach((l, i) => {
-          const t = raySphereHit(roObj, rdObj, l.local, l.radius * 1.15);
-          if (t < bestT) { bestT = t; best = i; }
-        });
-        return best;
-      }
-
       window.addEventListener('mousemove', (e) => {
-        const wasHover = isDragHover;
-        hoveredLobe = pickLobe(e.clientX, e.clientY);
-        if (isDragHover) {
-          if (wasHover) {
-            velYaw = (e.clientX - prevX) * 0.004;
-            velPitch = (e.clientY - prevY) * 0.004;
-          }
-          prevX = e.clientX; prevY = e.clientY;
-        } else {
-          hoveredLobe = -1;
-        }
+        const dx = e.clientX - lastX, dy = e.clientY - lastY;
+        velYaw += dx * 0.0009;
+        velPitch += dy * 0.0009;
+        lastX = e.clientX; lastY = e.clientY;
+        mouseX = e.clientX; mouseY = e.clientY;
+        cursorEl.style.left = mouseX + 'px';
+        cursorEl.style.top = mouseY + 'px';
       });
 
-      window.addEventListener('click', (e) => {
-        const idx = pickLobe(e.clientX, e.clientY);
-        if (idx >= 0 && isDragHover) {
-          const projectIndex = lobes[idx].project;
-          canvas.classList.add('morphing');
-          setTimeout(() => openProject(projectIndex), 700);
-        }
-      });
+      window.addEventListener('wheel', (e) => {
+        camDist = THREE.MathUtils.clamp(camDist + e.deltaY * 0.0035 * camDist, ZOOM_MIN, ZOOM_MAX);
+        e.preventDefault();
+      }, { passive: false });
 
-      // GLITCH: ambiente costante e leggero + convulsioni brevi e irregolari
-      let glitchLevel = 0.12;
+      function worldToScreen(worldPos) {
+        const rel = worldPos.clone().sub(camPos);
+        const zCam = rel.dot(camForward);
+        if (zCam <= 0.05) return null;
+        const xCam = rel.dot(camRight);
+        const yCam = rel.dot(camUp);
+        const aspect = window.innerWidth / window.innerHeight;
+        const uvXafter = xCam / (zCam * tanFov);
+        const uvY = yCam / (zCam * tanFov);
+        const sx = ((uvXafter / aspect) * 0.5 + 0.5) * window.innerWidth;
+        const syFromBottom = (uvY * 0.5 + 0.5) * window.innerHeight;
+        const sy = window.innerHeight - syFromBottom;
+        return { x: sx, y: sy, zCam };
+      }
+
+      function lobeExtension(phase, time) {
+        return 0.28 + 0.72 * (0.5 + 0.5 * Math.sin(time * 0.32 + phase * 2.0));
+      }
+
+      const MAGNET_R = 130;      // raggio di attrazione verso il mouse
+      const MAGNET_MAX = 0.55;   // quanto può essere "tirato" al massimo (non si blocca sul mouse)
+      const MAGNET_EASE = 0.22;  // morbidezza dell'inseguimento
+
+      function updateSymbols(time) {
+        lobes.forEach((l) => {
+          const ext = lobeExtension(l.phase, time);
+          const worldPos = l.dir.clone().multiplyScalar(l.len * ext).applyMatrix3(rotM3);
+          const proj = worldToScreen(worldPos);
+
+          if (!proj) { l.el.classList.add('dim'); return; }
+
+          const outwardDir = worldPos.clone().normalize();
+          const facing = -outwardDir.dot(camForward);
+          if (facing < 0.05) { l.el.classList.add('dim'); return; }
+
+          l.el.classList.remove('dim');
+
+          if (l.dispX === null) { l.dispX = proj.x; l.dispY = proj.y; }
+
+          const dx = mouseX - proj.x, dy = mouseY - proj.y;
+          const dist = Math.hypot(dx, dy);
+          const pull = Math.max(0, 1 - dist / MAGNET_R);
+          const pullStrength = pull * pull * MAGNET_MAX;
+          const targetX = proj.x + dx * pullStrength;
+          const targetY = proj.y + dy * pullStrength;
+
+          l.dispX += (targetX - l.dispX) * MAGNET_EASE;
+          l.dispY += (targetY - l.dispY) * MAGNET_EASE;
+
+          const scale = (0.75 + ext * 0.45) * (1 + pull * 0.35);
+          l.el.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(2)})`;
+          l.el.style.left = l.dispX + 'px';
+          l.el.style.top = l.dispY + 'px';
+          l.el.style.opacity = Math.min(1, facing * 1.8).toFixed(2);
+        });
+      }
+
+      let glitchLevel = 0.1;
       let glitchClock = 0, nextGlitchAt = 0.3;
+      function triggerGlitchPop() {
+        canvas.classList.remove('screen-glitch');
+        void canvas.offsetWidth;
+        canvas.classList.add('screen-glitch');
+      }
       function updateGlitch(dt) {
         glitchClock += dt;
-        glitchLevel = Math.max(0.12, glitchLevel - dt * 3.0);
+        glitchLevel = Math.max(0.1, glitchLevel - dt * 3.0);
         if (glitchClock >= nextGlitchAt) {
           glitchClock = 0;
           nextGlitchAt = 0.15 + Math.random() * 0.6;
           glitchLevel = 0.5 + Math.random() * 0.5;
-          if (Math.random() < 0.3) {
-            canvas.classList.remove('screen-glitch');
-            void canvas.offsetWidth;
-            canvas.classList.add('screen-glitch');
-          }
+          if (Math.random() < 0.3) triggerGlitchPop();
         }
         uniforms.uGlitch.value = glitchLevel;
       }
 
-      const RISE_RATE = 9.0;
-      const FALL_RATE = 2.0;
-
+      const RISE_RATE = 9.0, FALL_RATE = 2.0;
       const clock = new THREE.Clock();
+
       function animate() {
         requestAnimationFrame(animate);
         const dt = Math.min(clock.getDelta(), 0.05);
-        uniforms.uTime.value = clock.elapsedTime;
+        const t = clock.elapsedTime;
+        uniforms.uTime.value = t;
+
+        camPos.set(0, 0, camDist);
 
         updateRotation(dt);
         updateGlitch(dt);
+        updateSymbols(t);
 
         for (let i = 0; i < LOBE_COUNT; i++) {
           const target = (hoveredLobe === i) ? 1 : 0;
@@ -658,36 +663,72 @@
       animate();
 
       window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+        res = sizeRenderer();
+        uniforms.uResolution.value.set(res.w, res.h);
       });
     })();
 
-    // APERTURA / CHIUSURA STAGE
-    const projectStage = document.getElementById('projectStage');
+    // TRASCINAMENTO POPUP: click sull'area del pop up e trascinamento
+    function makeDraggable(el) {
+      let dragging = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
+      el.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.popup-close')) return;
+        dragging = true;
+        el.classList.add('dragging');
+        const rect = el.getBoundingClientRect();
+        origLeft = rect.left; origTop = rect.top;
+        el.style.right = 'auto';
+        startX = e.clientX; startY = e.clientY;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        el.style.left = (origLeft + (e.clientX - startX)) + 'px';
+        el.style.top = (origTop + (e.clientY - startY)) + 'px';
+      });
+      window.addEventListener('mouseup', () => {
+        dragging = false;
+        el.classList.remove('dragging');
+      });
+    }
+
+    // POPUP: foto e testo sopra la home, che resta visibile e animata dietro
+    const popupBackdrop = document.getElementById('popupBackdrop');
+    const popupPhoto = document.getElementById('popupPhoto');
+    const popupText = document.getElementById('popupText');
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
-    const canvasEl = document.getElementById('webgl-canvas');
+    const lobeSymbolsEl = document.getElementById('lobeSymbols');
+
+    makeDraggable(popupPhoto);
+    makeDraggable(popupText);
 
     function openProject(index) {
       const proj = projects[index];
       imageLayer.innerHTML = '';
       proj.images.forEach(url => {
         const block = document.createElement('div');
-        block.className = 'image-block';
+        block.className = 'popup-image-block';
         const img = document.createElement('img');
         img.src = url;
         block.appendChild(img);
         imageLayer.appendChild(block);
       });
       redText.innerText = proj.text;
-      projectStage.classList.add('active');
+      popupBackdrop.classList.add('active');
+      popupPhoto.classList.add('active');
+      popupText.classList.add('active');
+      lobeSymbolsEl.classList.add('hidden');
     }
 
     function closeProject() {
-      projectStage.classList.remove('active');
-      setTimeout(() => canvasEl.classList.remove('morphing'), 400);
+      popupBackdrop.classList.remove('active');
+      popupPhoto.classList.remove('active');
+      popupText.classList.remove('active');
+      lobeSymbolsEl.classList.remove('hidden');
     }
+
+    popupBackdrop.addEventListener('click', closeProject);
   </script>
 </body>
 </html>
