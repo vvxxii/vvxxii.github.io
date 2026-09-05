@@ -58,6 +58,7 @@
       mix-blend-mode: multiply;
       animation: vignetteGlitch 5s infinite steps(1);
     }
+    #vignette.paused, #grain.paused { animation-play-state: paused; }
     @keyframes vignetteGlitch {
       0%, 100% { opacity: 1; } 41% { opacity: 1; } 42% { opacity: 0.6; } 43% { opacity: 1; }
       77% { opacity: 1; } 78% { opacity: 0.75; transform: translateX(3px); } 79% { opacity: 1; transform: translateX(0); }
@@ -84,17 +85,18 @@
     .lobe-symbol {
       position: absolute;
       top: 0; left: 0;
-      width: 26px; height: 26px;
+      width: 30px; height: 30px;
       background-repeat: no-repeat;
       background-size: 100% 100%;
       image-rendering: pixelated;
       pointer-events: auto;
-      filter: drop-shadow(2px 2px 0 #000) drop-shadow(0 0 5px rgba(140,15,5,0.55));
+      filter: drop-shadow(1px 1px 0 #000) drop-shadow(0 0 5px rgba(255,217,61,0.5));
       user-select: none;
       will-change: transform, opacity, left, top;
     }
     .lobe-symbol.dim { opacity: 0 !important; pointer-events: none; }
 
+    /* cursore custom: solo croce <-> bastone di Asclepio, nessun effetto glitch */
     #customCursor {
       position: fixed; top: 0; left: 0;
       z-index: 100;
@@ -104,18 +106,10 @@
       color: #ffd93d;
       text-shadow: 0 0 6px rgba(255,217,61,0.85), 0 0 2px #000;
     }
-    #customCursor .c-cross { display: inline-block; animation: cursorGlitch 1.4s infinite steps(1); }
+    #customCursor .c-cross { display: inline-block; }
     #customCursor .c-rod { display: none; color: #ff9a3d; text-shadow: 0 0 8px rgba(255,154,61,0.9); }
     #customCursor.interactive .c-cross { display: none; }
     #customCursor.interactive .c-rod { display: inline-block; }
-    @keyframes cursorGlitch {
-      0%, 100% { transform: translate(0,0); opacity: 1; }
-      12% { transform: translate(1px,-1px); opacity: 0.65; }
-      24% { transform: translate(-1px,1px); opacity: 1; }
-      48% { transform: translate(0,0); }
-      52% { transform: translate(2px,0); opacity: 0.55; }
-      56% { transform: translate(0,0); opacity: 1; }
-    }
 
     .popup-backdrop {
       position: fixed; inset: 0;
@@ -127,13 +121,12 @@
     }
     .popup-backdrop.active { opacity: 1; pointer-events: auto; }
 
-    /* spigoli vivi, nessun bordo arrotondato */
     .popup {
       position: fixed;
       background: #0a0707;
       border: 1px solid rgba(184,0,0,0.4);
       border-radius: 0;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.85);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.75);
       z-index: 31;
       opacity: 0;
       pointer-events: none;
@@ -151,7 +144,6 @@
     }
     .popup-photo.active { transform: translate(-50%,-50%) scale(1); }
 
-    /* testo: nessun contenitore visibile, solo la colonna di testo */
     .popup-text {
       top: 5vh; right: 5vw;
       width: min(15vw, 230px); height: 90vh;
@@ -164,7 +156,12 @@
 
     .popup.active { opacity: 1; pointer-events: auto; }
 
-    .popup-scroll { width: 100%; height: 100%; overflow-y: auto; scrollbar-width: none; }
+    .popup-scroll {
+      width: 100%; height: 100%;
+      overflow-y: auto;
+      scrollbar-width: none;
+      touch-action: pan-y; /* riabilita lo scroll verticale col dito dentro il popup */
+    }
     .popup-scroll::-webkit-scrollbar { display: none; }
 
     .popup-image-block { width: 100%; height: 84vh; position: relative; }
@@ -175,7 +172,6 @@
       opacity: 1;
     }
 
-    /* testo semplice, senza effetti */
     .red-text-content {
       padding: 5px 7px;
       color: #b80000;
@@ -200,7 +196,6 @@
     }
     .popup-close:hover { transform: scale(1.3); text-shadow: 0 0 16px rgba(255,120,0,0.95); }
 
-    /* MOBILE: foto a tutto schermo, colonna testo più larga e testo più piccolo */
     @media (max-width: 768px) {
       .popup-photo {
         top: 0; left: 0; width: 100vw; height: 100vh;
@@ -229,13 +224,13 @@
   <div class="popup-backdrop" id="popupBackdrop"></div>
   <div class="popup popup-photo" id="popupPhoto">
     <div class="popup-inner">
-      <button class="popup-close" onclick="closeProject()">✕</button>
+      <button class="popup-close" onclick="closePhotoPopup()">✕</button>
       <div class="popup-scroll" id="imageLayer"></div>
     </div>
   </div>
   <div class="popup popup-text" id="popupText">
     <div class="popup-inner">
-      <button class="popup-close" onclick="closeProject()">✕</button>
+      <button class="popup-close" onclick="closeTextPopup()">✕</button>
       <div class="popup-scroll">
         <div class="red-text-content" id="redText"></div>
       </div>
@@ -247,51 +242,100 @@
       {
         id: "PROJECT_01",
         text: "REGISTRO DI DECOMPOSIZIONE ESTETICA // Scomposizione organica della materia luminosa. La carne e l'acciaio convergono in un unico punto focale. Nessuna presenza umana rilevata oltre la soglia del silenzio. Architettura priva di gravità apparente, fondata su principi di contrazione ed espansione volumetrica. Ogni sezione fotografica costituisce un reperto esumato da strati geologici sotterranei. Frequenze visive ridotte ai minimi termini per stimolare una percezione pura, viscerale, priva di interferenze esterne. L'oscurità non è assenza di luce, ma presenza densa di materia non riflettente.",
-        images: [
-          'https://picsum.photos/id/1025/1600/1000',
-          'https://picsum.photos/id/1040/1600/1000',
-          'https://picsum.photos/id/1062/1600/1000',
-          'https://picsum.photos/id/1069/1600/1000'
-        ]
+        images: [1025,1040,1062,1069,1050,1060,1074,1080].map(id => `https://picsum.photos/id/${id}/1200/800`)
       },
       {
         id: "PROJECT_02",
         text: "SPAZIO GEOLOGICO CORRETTO // Infiltrazione di frequenze scure su superfici architettoniche monolitiche. Nessun segnale di ritorno. L'occhio osserva la struttura priva di massa. Sequenze d'ombra calcolate secondo algoritmi di rifrazione minerale. Il corpo reattivo si adatta all'ambiente ostile tramite una serie di trasformazioni anatomiche temporanee.",
-        images: [
-          'https://picsum.photos/id/1050/1600/1000',
-          'https://picsum.photos/id/1060/1600/1000'
-        ]
+        images: [1050,1060,1084,1015,1019,1039,1043].map(id => `https://picsum.photos/id/${id}/1200/800`)
       }
     ];
 
-    const SYMBOLS = ["☯", "👁", "♠", "☞", "❧", "@"];
-    const ICON_RGB = [156, 22, 8]; // rosso scuro e saturo, non più "pallido"
+    const ICON_RGB = [255, 217, 61]; // giallo, come il cursore
 
-    // costruisce un'icona 8-bit: disegna il glifo piccolo, poi elimina l'antialiasing
-    // (soglia sul canale alfa) e forza un colore piatto -> silhouette a pixel netti
-    function buildPixelIcon(char) {
-      const src = 18;
+    // rasterizza un disegno vettoriale sottile in un'icona a pixel netti
+    function rasterizeIcon(drawFn, src) {
       const c = document.createElement('canvas');
       c.width = src; c.height = src;
       const ctx = c.getContext('2d');
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(char, src / 2, src / 2 + 1);
-
+      drawFn(ctx, src);
       const imgData = ctx.getImageData(0, 0, src, src);
       const d = imgData.data;
       for (let i = 0; i < d.length; i += 4) {
-        if (d[i + 3] > 90) {
+        if (d[i + 3] > 70) {
           d[i] = ICON_RGB[0]; d[i + 1] = ICON_RGB[1]; d[i + 2] = ICON_RGB[2]; d[i + 3] = 255;
-        } else {
-          d[i + 3] = 0;
-        }
+        } else { d[i + 3] = 0; }
       }
       ctx.putImageData(imgData, 0, 0);
       return c.toDataURL();
     }
+
+    // icone disegnate a tratto sottile, nello stesso spirito slanciato del cursore ⚕
+    function iconTao(ctx, s) {
+      const cx = s*0.5, cy = s*0.5, r = s*0.36;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.3; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy - r/2, r/2, Math.PI*0.5, Math.PI*1.5, true);
+      ctx.arc(cx, cy + r/2, r/2, Math.PI*1.5, Math.PI*0.5, true);
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy - r/2, r*0.13, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy + r/2, r*0.13, 0, Math.PI*2); ctx.stroke();
+    }
+    function iconEye(ctx, s) {
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s*0.08, s*0.5);
+      ctx.quadraticCurveTo(s*0.5, s*0.08, s*0.92, s*0.5);
+      ctx.quadraticCurveTo(s*0.5, s*0.92, s*0.08, s*0.5);
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(s*0.5, s*0.5, s*0.11, 0, Math.PI*2); ctx.stroke();
+    }
+    function iconSpade(ctx, s) {
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s*0.5, s*0.1);
+      ctx.bezierCurveTo(s*0.92, s*0.36, s*0.76, s*0.72, s*0.5, s*0.6);
+      ctx.bezierCurveTo(s*0.24, s*0.72, s*0.08, s*0.36, s*0.5, s*0.1);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(s*0.5, s*0.6); ctx.lineTo(s*0.5, s*0.88);
+      ctx.moveTo(s*0.36, s*0.9); ctx.lineTo(s*0.64, s*0.9);
+      ctx.stroke();
+    }
+    function iconPointer(ctx, s) {
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s*0.2, s*0.1);
+      ctx.lineTo(s*0.2, s*0.8);
+      ctx.lineTo(s*0.4, s*0.62);
+      ctx.lineTo(s*0.54, s*0.9);
+      ctx.lineTo(s*0.67, s*0.82);
+      ctx.lineTo(s*0.54, s*0.55);
+      ctx.lineTo(s*0.78, s*0.48);
+      ctx.closePath();
+      ctx.stroke();
+    }
+    function iconLeaf(ctx, s) {
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.3; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s*0.5, s*0.1);
+      ctx.quadraticCurveTo(s*0.9, s*0.32, s*0.5, s*0.9);
+      ctx.quadraticCurveTo(s*0.1, s*0.32, s*0.5, s*0.1);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(s*0.5, s*0.22); ctx.lineTo(s*0.5, s*0.78);
+      ctx.stroke();
+    }
+    function iconAt(ctx, s) {
+      ctx.fillStyle = '#fff';
+      ctx.font = '300 ' + Math.round(s*0.82) + 'px "Space Grotesk", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('@', s/2, s/2 + 1);
+    }
+
+    const ICON_BUILDERS = [iconTao, iconEye, iconSpade, iconPointer, iconLeaf, iconAt];
+    const ICON_SRC = 20;
 
     const LOBE_COUNT = 6;
     const RENDER_SCALE = 0.42;
@@ -490,7 +534,7 @@
     let camDist = 5.5;
     const ZOOM_MIN = 2.4, ZOOM_MAX = 9.5;
     let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
-    let popupOpen = false; // quando true, il raymarch si ferma del tutto (risparmio risorse)
+    let popupOpen = false;
 
     (function init() {
       const canvas = document.getElementById('webgl-canvas');
@@ -527,7 +571,6 @@
           len: 1.35 + Math.random() * 1.35,
           radius: 0.16 + Math.random() * 0.07,
           project: projectIndex,
-          symbol: SYMBOLS[i],
           phase: Math.random() * Math.PI * 2,
           glow: 0,
           el: null, dispX: null, dispY: null
@@ -540,7 +583,7 @@
       lobes.forEach((l, i) => {
         const el = document.createElement('div');
         el.className = 'lobe-symbol dim';
-        el.style.backgroundImage = `url(${buildPixelIcon(l.symbol)})`;
+        el.style.backgroundImage = `url(${rasterizeIcon(ICON_BUILDERS[i], ICON_SRC)})`;
         el.addEventListener('mouseenter', () => { hoveredLobe = i; cursorEl.classList.add('interactive'); });
         el.addEventListener('mouseleave', () => { if (hoveredLobe === i) hoveredLobe = -1; cursorEl.classList.remove('interactive'); });
         el.addEventListener('click', (ev) => { ev.stopPropagation(); triggerGlitchPop(); openProject(l.project); });
@@ -622,7 +665,6 @@
       window.addEventListener('mouseup', dragEnd);
       window.addEventListener('mousemove', (e) => dragMove(e.clientX, e.clientY));
 
-      // touch: muovere il blob col dito
       window.addEventListener('touchstart', (e) => {
         const t = e.touches[0];
         dragStart(t.clientX, t.clientY, e.target);
@@ -726,9 +768,6 @@
 
       function animate() {
         requestAnimationFrame(animate);
-
-        // POP UP APERTO -> il blob non è visibile: niente raymarch, niente calcoli,
-        // risorse libere per il drag/scroll dei pop up (risolve il lag del cursore)
         if (popupOpen) { clock.getDelta(); return; }
 
         const dt = Math.min(clock.getDelta(), 0.05);
@@ -758,36 +797,31 @@
       });
     })();
 
+    // TRASCINAMENTO POPUP: solo con mouse (desktop). Su touch è disattivato per
+    // non entrare in conflitto con lo scroll delle foto.
     function makeDraggable(el) {
       let dragging = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
-      function start(x, y, targetEl) {
-        if (targetEl && targetEl.closest('.popup-close')) return;
+      el.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.popup-close')) return;
         dragging = true;
         el.classList.add('dragging');
         const rect = el.getBoundingClientRect();
         origLeft = rect.left; origTop = rect.top;
         el.style.right = 'auto';
         el.style.transform = 'none';
-        startX = x; startY = y;
-      }
-      function move(x, y) {
-        if (!dragging) return;
-        el.style.left = (origLeft + (x - startX)) + 'px';
-        el.style.top = (origTop + (y - startY)) + 'px';
-      }
-      function end() { dragging = false; el.classList.remove('dragging'); }
-
-      el.addEventListener('mousedown', (e) => { start(e.clientX, e.clientY, e.target); e.preventDefault(); e.stopPropagation(); });
-      window.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
-      window.addEventListener('mouseup', end);
-
-      el.addEventListener('touchstart', (e) => {
-        const t = e.touches[0];
-        start(t.clientX, t.clientY, e.target);
+        startX = e.clientX; startY = e.clientY;
+        e.preventDefault();
         e.stopPropagation();
-      }, { passive: true });
-      window.addEventListener('touchmove', (e) => { if (dragging) { const t = e.touches[0]; move(t.clientX, t.clientY); } }, { passive: true });
-      window.addEventListener('touchend', end);
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        el.style.left = (origLeft + (e.clientX - startX)) + 'px';
+        el.style.top = (origTop + (e.clientY - startY)) + 'px';
+      });
+      window.addEventListener('mouseup', () => {
+        dragging = false;
+        el.classList.remove('dragging');
+      });
     }
 
     const popupBackdrop = document.getElementById('popupBackdrop');
@@ -796,6 +830,8 @@
     const imageLayer = document.getElementById('imageLayer');
     const redText = document.getElementById('redText');
     const lobeSymbolsEl = document.getElementById('lobeSymbols');
+    const vignetteEl = document.getElementById('vignette');
+    const grainEl = document.getElementById('grain');
 
     makeDraggable(popupPhoto);
     makeDraggable(popupText);
@@ -811,28 +847,46 @@
         const block = document.createElement('div');
         block.className = 'popup-image-block';
         const img = document.createElement('img');
+        img.loading = 'lazy';
         img.src = url;
         block.appendChild(img);
         imageLayer.appendChild(block);
       });
       redText.innerText = proj.text;
+
       popupBackdrop.classList.add('active');
       popupPhoto.classList.add('active');
       popupText.classList.add('active');
       lobeSymbolsEl.classList.add('hidden');
+      vignetteEl.classList.add('paused');
+      grainEl.classList.add('paused');
       popupOpen = true;
     }
 
-    function closeProject() {
-      popupBackdrop.classList.remove('active');
-      popupPhoto.classList.remove('active');
-      popupText.classList.remove('active');
-      lobeSymbolsEl.classList.remove('hidden');
-      popupOpen = false;
-      setTimeout(() => { resetPopupPosition(popupPhoto); resetPopupPosition(popupText); }, 420);
+    // ogni popup si chiude in modo indipendente: chiudere il testo non chiude la foto e viceversa
+    function checkAllClosed() {
+      const anyOpen = popupPhoto.classList.contains('active') || popupText.classList.contains('active');
+      if (!anyOpen) {
+        popupBackdrop.classList.remove('active');
+        lobeSymbolsEl.classList.remove('hidden');
+        vignetteEl.classList.remove('paused');
+        grainEl.classList.remove('paused');
+        popupOpen = false;
+      }
     }
 
-    popupBackdrop.addEventListener('click', closeProject);
+    function closePhotoPopup() {
+      popupPhoto.classList.remove('active');
+      setTimeout(() => resetPopupPosition(popupPhoto), 420);
+      checkAllClosed();
+    }
+    function closeTextPopup() {
+      popupText.classList.remove('active');
+      setTimeout(() => resetPopupPosition(popupText), 420);
+      checkAllClosed();
+    }
+
+    popupBackdrop.addEventListener('click', () => { closePhotoPopup(); closeTextPopup(); });
   </script>
 </body>
 </html>
