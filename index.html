@@ -45,7 +45,6 @@
       100% { clip-path: inset(0 0 0 0); transform: translate(0,0); }
     }
 
-    /* vignettatura + grana: SOLO sulla home, i popup restano fuori */
     #vignette {
       position: fixed; inset: 0;
       z-index: 20;
@@ -70,7 +69,6 @@
       0% { transform: translate(0,0); } 50% { transform: translate(-3%,2%); } 100% { transform: translate(2%,-3%); }
     }
 
-    /* simboli emoji al culmine dei tentacoli, sopra alla grana */
     #lobeSymbols {
       position: fixed; inset: 0;
       z-index: 25;
@@ -81,15 +79,15 @@
     .lobe-symbol {
       position: absolute;
       top: 0; left: 0;
-      font-size: 1.55rem;
+      font-size: 1.5rem;
+      color: #c94b1f;
       pointer-events: auto;
-      filter: drop-shadow(0 0 6px rgba(184,0,0,0.55));
+      filter: drop-shadow(0 0 7px rgba(201,75,31,0.6));
       user-select: none;
       will-change: transform, opacity, left, top;
     }
     .lobe-symbol.dim { opacity: 0 !important; pointer-events: none; }
 
-    /* cursore custom: croce gialla glitchata di default, bastone di Asclepio sugli interattivi */
     #customCursor {
       position: fixed; top: 0; left: 0;
       z-index: 100;
@@ -112,7 +110,6 @@
       56% { transform: translate(0,0); opacity: 1; }
     }
 
-    /* backdrop + popup: si sovrappongono alla home, non toccati da vignetta/grana/glitch */
     .popup-backdrop {
       position: fixed; inset: 0;
       z-index: 30;
@@ -131,21 +128,36 @@
       box-shadow: 0 30px 80px rgba(0,0,0,0.85);
       z-index: 31;
       opacity: 0;
-      transform: scale(0.94) translateY(14px);
       pointer-events: none;
       transition: opacity 0.4s ease, transform 0.4s ease;
       overflow: hidden;
     }
-    .popup.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
     .popup.dragging { transition: none; }
 
     .popup-inner { width: 100%; height: 100%; position: relative; animation: floatBob 7s ease-in-out infinite; }
 
-    .popup-photo { top: 5vh; left: 5vw; width: min(58vw, 900px); height: 90vh; }
+    /* foto: più grande e centrata */
+    .popup-photo {
+      top: 50%; left: 50%;
+      width: min(68vw, 1040px); height: 92vh;
+      transform: translate(-50%,-50%) scale(0.94);
+    }
+    .popup-photo.active { transform: translate(-50%,-50%) scale(1); }
     .popup-photo .popup-inner { animation-duration: 7.5s; }
 
-    .popup-text { top: 5vh; right: 5vw; width: min(15vw, 230px); height: 90vh; }
+    /* testo: stretto, trasparente */
+    .popup-text {
+      top: 5vh; right: 5vw;
+      width: min(15vw, 230px); height: 90vh;
+      background: rgba(9,5,5,0.32);
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      transform: scale(0.94) translateY(14px);
+    }
+    .popup-text.active { transform: scale(1) translateY(0); }
     .popup-text .popup-inner { animation-duration: 9s; animation-delay: 0.6s; }
+
+    .popup.active { opacity: 1; pointer-events: auto; }
 
     @keyframes floatBob {
       0%, 100% { transform: translateY(0); }
@@ -155,11 +167,11 @@
     .popup-scroll { width: 100%; height: 100%; overflow-y: auto; scrollbar-width: none; }
     .popup-scroll::-webkit-scrollbar { display: none; }
 
-    .popup-image-block { width: 100%; height: 82vh; position: relative; }
+    .popup-image-block { width: 100%; height: 84vh; position: relative; }
     .popup-image-block img {
       width: 100%; height: 100%;
       object-fit: cover;
-      filter: brightness(0.82) contrast(112%) grayscale(15%);
+      filter: brightness(0.85) contrast(110%) grayscale(10%);
       opacity: 1;
     }
 
@@ -180,16 +192,18 @@
       50%      { color: #d9701f; text-shadow: 0 0 15px rgba(255,150,50,0.6); }
     }
 
+    /* X di chiusura: stessa taglia/stile del cursore, rosso fuoco */
     .popup-close {
-      position: absolute; top: 0.6rem; right: 0.9rem;
-      color: #888;
+      position: absolute; top: 0.7rem; right: 0.9rem;
+      color: #ff2200;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.2rem; line-height: 1;
+      font-size: 1.15rem; line-height: 1;
       z-index: 5;
       background: transparent; border: none;
-      transition: color 0.3s ease, transform 0.3s ease;
+      text-shadow: 0 0 8px rgba(255,51,0,0.85), 0 0 3px #000;
+      transition: transform 0.25s ease, text-shadow 0.25s ease;
     }
-    .popup-close:hover { color: #b80000; transform: scale(1.2); }
+    .popup-close:hover { transform: scale(1.3); text-shadow: 0 0 16px rgba(255,120,0,0.95); }
   </style>
 </head>
 <body>
@@ -230,8 +244,7 @@
           'https://picsum.photos/id/1040/1600/1000',
           'https://picsum.photos/id/1062/1600/1000',
           'https://picsum.photos/id/1069/1600/1000'
-        ],
-        symbols: ["👁️", "🦴", "🕯️"]
+        ]
       },
       {
         id: "PROJECT_02",
@@ -239,13 +252,15 @@
         images: [
           'https://picsum.photos/id/1050/1600/1000',
           'https://picsum.photos/id/1060/1600/1000'
-        ],
-        symbols: ["🕷️", "🦂", "⚰️"]
+        ]
       }
     ];
 
+    // icone stile cursore (monocrome, non emoji colorate) — una per tentacolo
+    const SYMBOLS = ["☯", "👁\uFE0E", "♠", "☞", "❧", "@"];
+
     const LOBE_COUNT = 6;
-    const RENDER_SCALE = 0.42; // bassa risoluzione voluta: aspetto marcio, a blocchi
+    const RENDER_SCALE = 0.42;
 
     const VERT = `
       void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }
@@ -273,6 +288,7 @@
       uniform float uLobeGlow[LOBE_COUNT];
       uniform float uLobePhase[LOBE_COUNT];
       uniform float uGlitch;
+      uniform float uPaletteFlash; // 0 = rosso, 1 = verde acido, 2 = giallo
 
       float hash13(vec3 p) {
         p = fract(p * 0.3183099 + 0.1);
@@ -311,20 +327,24 @@
       float sceneSDF(vec3 p, out float glowAmt) {
         vec3 op = uInvRot * p;
 
+        // massa centrale ridotta e irregolare (non più una sfera perfetta):
+        // il raggio varia con la direzione, dominano i tentacoli
         float breathe = 0.04 * sin(uTime * 0.8);
-        float d = sdSphere(op, vec3(0.0), 0.82 + breathe * 0.25);
+        vec3 nrm = normalize(op + 0.0001);
+        float coreNoise = fbm(nrm * 2.4 + uTime * 0.03);
+        float coreR = 0.42 + coreNoise * 0.22 + breathe * 0.12;
+        float d = length(op) - coreR;
         glowAmt = 0.0;
 
         for (int i = 0; i < LOBE_COUNT; i++) {
           float ext = lobeExt(uLobePhase[i]);
           float len = uLobeLen[i] * ext;
 
-          // tentacolo: catena di sfere che si assottiglia dalla base alla punta
           for (int s = 0; s < SEGS; s++) {
             float h = float(s) / float(SEGS - 1);
-            vec3 segPos = uLobeDir[i] * mix(0.22, len, h);
-            float segR = uLobeRadius[i] * mix(1.7, 0.42, h) * (0.55 + 0.45 * ext);
-            d = smin(d, sdSphere(op, segPos, segR), 0.24);
+            vec3 segPos = uLobeDir[i] * mix(0.18, len, h);
+            float segR = uLobeRadius[i] * mix(1.7, 0.4, h) * (0.55 + 0.45 * ext);
+            d = smin(d, sdSphere(op, segPos, segR), 0.22);
           }
 
           vec3 tip = uLobeDir[i] * len;
@@ -334,7 +354,7 @@
         }
 
         float wrinkle = fbm(op * 3.4 + uTime * 0.05) - 0.5;
-        d += wrinkle * 0.045;
+        d += wrinkle * 0.04;
 
         float decay = fbm(op * 2.1 + uTime * 0.12);
         float holeMask = smoothstep(0.53, 0.64, decay);
@@ -398,21 +418,25 @@
 
           float fres = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
 
-          // pelle procedurale organica lucida, niente texture fotografiche
           float mottle = fbm(op * 2.6);
           vec3 baseColor = mix(vec3(0.05,0.018,0.018), vec3(0.16,0.05,0.045), mottle);
 
-          vec3 warm = vec3(1.0, 0.34, 0.12);
+          vec3 warmRed    = vec3(1.0, 0.34, 0.12);
+          vec3 warmGreen  = vec3(0.55, 1.0, 0.15);
+          vec3 warmYellow = vec3(1.0, 0.86, 0.15);
+          vec3 warm = warmRed;
+          if (uPaletteFlash > 1.5) warm = warmYellow;
+          else if (uPaletteFlash > 0.5) warm = warmGreen;
+
           vec3 cool = vec3(0.10, 0.05, 0.20);
 
           col = baseColor * (0.07 + diff * 0.85) * warm;
           col += baseColor * rim * 0.2 * cool;
           col += fres * warm * 0.3;
 
-          // specular stretto -> superficie lucida, roughness bassa
           vec3 halfDir = normalize(lightDir + viewDir);
           float spec = pow(max(dot(n, halfDir), 0.0), 70.0);
-          col += vec3(1.0, 0.92, 0.85) * spec * 0.9;
+          col += vec3(1.0, 0.95, 0.9) * spec * 0.9;
           float specRim = pow(max(dot(n, normalize(rimDir + viewDir)), 0.0), 40.0);
           col += cool * specRim * 0.5;
 
@@ -458,24 +482,19 @@
       const FOV = THREE.MathUtils.degToRad(45);
       const tanFov = Math.tan(FOV / 2);
 
-      // tentacoli: lunghezze diverse tra loro (non tutti uguali), simboli distinti per progetto
       const lobes = [];
-      let symCursor = [0, 0];
       for (let i = 0; i < LOBE_COUNT; i++) {
         const y = 1 - (i / (LOBE_COUNT - 1)) * 2;
         const r = Math.sqrt(Math.max(0, 1 - y * y));
         const theta = Math.PI * (3 - Math.sqrt(5)) * i;
         const dir = new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r).normalize();
         const projectIndex = i % projects.length;
-        const proj = projects[projectIndex];
-        const symbol = proj.symbols[symCursor[projectIndex] % proj.symbols.length];
-        symCursor[projectIndex]++;
         lobes.push({
           dir,
-          len: 1.35 + Math.random() * 1.35, // tentacoli di lunghezza diversa tra loro
-          radius: 0.15 + Math.random() * 0.07,
+          len: 1.35 + Math.random() * 1.35,
+          radius: 0.16 + Math.random() * 0.07,
           project: projectIndex,
-          symbol,
+          symbol: SYMBOLS[i],
           phase: Math.random() * Math.PI * 2,
           glow: 0,
           el: null, dispX: null, dispY: null
@@ -515,25 +534,30 @@
         uLobeRadius: { value: lobes.map(l => l.radius) },
         uLobeGlow: { value: lobes.map(() => 0) },
         uLobePhase: { value: lobes.map(l => l.phase) },
-        uGlitch: { value: 0 }
+        uGlitch: { value: 0 },
+        uPaletteFlash: { value: 0 }
       };
 
       const material = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms });
       const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
       scene.add(quad);
 
+      // ROTAZIONE: solo click+trascinamento. La deriva idle/random resta sempre attiva.
       let yaw = 0, pitch = 0;
       let velYaw = 0, velPitch = 0;
+      let isDragging = false;
       let lastX = window.innerWidth / 2, lastY = window.innerHeight / 2;
       let rotM3 = new THREE.Matrix3();
       let invRot = new THREE.Matrix3();
       let hoveredLobe = -1;
 
-      function updateRotation(dt) {
+      function updateRotation(dt, t) {
         velYaw *= 0.94;
         velPitch *= 0.94;
-        yaw += velYaw + 0.12 * dt;
-        pitch += velPitch + 0.05 * dt;
+        const idleYaw = 0.09 + 0.05 * Math.sin(t * 0.13);
+        const idlePitch = 0.04 * Math.sin(t * 0.07 + 1.3);
+        yaw += velYaw + idleYaw * dt;
+        pitch += velPitch + idlePitch * dt;
         pitch = THREE.MathUtils.clamp(pitch, -1.1, 1.1);
 
         const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), yaw);
@@ -545,14 +569,23 @@
         uniforms.uInvRot.value.copy(invRot);
       }
 
-      window.addEventListener('mousemove', (e) => {
-        const dx = e.clientX - lastX, dy = e.clientY - lastY;
-        velYaw += dx * 0.0009;
-        velPitch += dy * 0.0009;
+      window.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.lobe-symbol, .popup, .popup-close')) return;
+        isDragging = true;
         lastX = e.clientX; lastY = e.clientY;
+      });
+      window.addEventListener('mouseup', () => { isDragging = false; });
+
+      window.addEventListener('mousemove', (e) => {
         mouseX = e.clientX; mouseY = e.clientY;
         cursorEl.style.left = mouseX + 'px';
         cursorEl.style.top = mouseY + 'px';
+        if (isDragging) {
+          const dx = e.clientX - lastX, dy = e.clientY - lastY;
+          velYaw += dx * 0.0012;
+          velPitch += dy * 0.0012;
+          lastX = e.clientX; lastY = e.clientY;
+        }
       });
 
       window.addEventListener('wheel', (e) => {
@@ -579,9 +612,9 @@
         return 0.28 + 0.72 * (0.5 + 0.5 * Math.sin(time * 0.32 + phase * 2.0));
       }
 
-      const MAGNET_R = 130;      // raggio di attrazione verso il mouse
-      const MAGNET_MAX = 0.55;   // quanto può essere "tirato" al massimo (non si blocca sul mouse)
-      const MAGNET_EASE = 0.22;  // morbidezza dell'inseguimento
+      const MAGNET_R = 140;
+      const MAGNET_MAX = 0.55;
+      const MAGNET_EASE = 0.22;
 
       function updateSymbols(time) {
         lobes.forEach((l) => {
@@ -609,7 +642,8 @@
           l.dispX += (targetX - l.dispX) * MAGNET_EASE;
           l.dispY += (targetY - l.dispY) * MAGNET_EASE;
 
-          const scale = (0.75 + ext * 0.45) * (1 + pull * 0.35);
+          // crescono parecchio quando il cursore si avvicina
+          const scale = (0.72 + ext * 0.4) * (1 + pull * 1.3);
           l.el.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(2)})`;
           l.el.style.left = l.dispX + 'px';
           l.el.style.top = l.dispY + 'px';
@@ -617,12 +651,18 @@
         });
       }
 
+      // GLITCH + virata di palette (rosso -> verde acido / giallo, a scatti)
       let glitchLevel = 0.1;
       let glitchClock = 0, nextGlitchAt = 0.3;
       function triggerGlitchPop() {
         canvas.classList.remove('screen-glitch');
         void canvas.offsetWidth;
         canvas.classList.add('screen-glitch');
+      }
+      function flashPalette() {
+        uniforms.uPaletteFlash.value = Math.random() < 0.5 ? 1 : 2;
+        const dur = 80 + Math.random() * 160;
+        setTimeout(() => { uniforms.uPaletteFlash.value = 0; }, dur);
       }
       function updateGlitch(dt) {
         glitchClock += dt;
@@ -632,6 +672,7 @@
           nextGlitchAt = 0.15 + Math.random() * 0.6;
           glitchLevel = 0.5 + Math.random() * 0.5;
           if (Math.random() < 0.3) triggerGlitchPop();
+          if (Math.random() < 0.22) flashPalette();
         }
         uniforms.uGlitch.value = glitchLevel;
       }
@@ -647,7 +688,7 @@
 
         camPos.set(0, 0, camDist);
 
-        updateRotation(dt);
+        updateRotation(dt, t);
         updateGlitch(dt);
         updateSymbols(t);
 
@@ -668,7 +709,6 @@
       });
     })();
 
-    // TRASCINAMENTO POPUP: click sull'area del pop up e trascinamento
     function makeDraggable(el) {
       let dragging = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
       el.addEventListener('mousedown', (e) => {
@@ -678,8 +718,10 @@
         const rect = el.getBoundingClientRect();
         origLeft = rect.left; origTop = rect.top;
         el.style.right = 'auto';
+        el.style.transform = 'none'; // da qui in poi la posizione è gestita solo da left/top
         startX = e.clientX; startY = e.clientY;
         e.preventDefault();
+        e.stopPropagation();
       });
       window.addEventListener('mousemove', (e) => {
         if (!dragging) return;
@@ -692,7 +734,6 @@
       });
     }
 
-    // POPUP: foto e testo sopra la home, che resta visibile e animata dietro
     const popupBackdrop = document.getElementById('popupBackdrop');
     const popupPhoto = document.getElementById('popupPhoto');
     const popupText = document.getElementById('popupText');
@@ -702,6 +743,10 @@
 
     makeDraggable(popupPhoto);
     makeDraggable(popupText);
+
+    function resetPopupPosition(el) {
+      el.style.left = ''; el.style.top = ''; el.style.right = ''; el.style.transform = '';
+    }
 
     function openProject(index) {
       const proj = projects[index];
@@ -726,6 +771,7 @@
       popupPhoto.classList.remove('active');
       popupText.classList.remove('active');
       lobeSymbolsEl.classList.remove('hidden');
+      setTimeout(() => { resetPopupPosition(popupPhoto); resetPopupPosition(popupText); }, 420);
     }
 
     popupBackdrop.addEventListener('click', closeProject);
